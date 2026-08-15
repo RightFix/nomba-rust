@@ -810,20 +810,6 @@ pub struct CreateMandateResponse {
 
 /// Global Collections models
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FetchPaymentMethodsResponse {
-    pub code: String,
-    pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ListInstitutionProvidersResponse {
-    pub code: String,
-    pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitiateMobileMoneyInflowData {
     #[serde(rename = "transactionReference")]
     pub transaction_reference: String,

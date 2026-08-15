@@ -41,7 +41,7 @@ impl Checkout {
             body["metadata"] = metadata;
         }
 
-        let response = self.client.post("/v1/checkout/orders", &body, None)?;
+        let response = self.client.post("/v1/checkout/order", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -49,8 +49,11 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionResponse> {
-        let path = format!("/v1/checkout/orders/{}/transaction", order_reference.into());
-        let response = self.client.get(&path, None)?;
+        let params = vec![
+            ("idType", "ORDER_REFERENCE".to_string()),
+            ("id", order_reference.into()),
+        ];
+        let response = self.client.get("/v1/checkout/transaction", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -60,12 +63,12 @@ impl Checkout {
         amount: impl Into<String>,
         reason: impl Into<String>,
     ) -> Result<RefundCheckoutResponse> {
-        let path = format!("/v1/checkout/orders/{}/refund", order_reference.into());
         let body = json!({
+            "orderReference": order_reference.into(),
             "amount": amount.into(),
             "reason": reason.into(),
         });
-        let response = self.client.post(&path, &body, None)?;
+        let response = self.client.post("/v1/checkout/refund", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -73,7 +76,7 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutOrderDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}", order_reference.into());
+        let path = format!("/v1/checkout/order/{}", order_reference.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -86,8 +89,8 @@ impl Checkout {
         save_card: Option<bool>,
         device_information: Option<serde_json::Value>,
     ) -> Result<SubmitCardDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}/card", order_reference.into());
         let mut body = json!({
+            "orderReference": order_reference.into(),
             "cardDetails": card_details.into(),
             "key": key.into(),
         });
@@ -97,7 +100,7 @@ impl Checkout {
         if let Some(device_information) = device_information {
             body["deviceInformation"] = device_information;
         }
-        let response = self.client.post(&path, &body, None)?;
+        let response = self.client.post("/v1/checkout/checkout-card-detail", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -107,12 +110,12 @@ impl Checkout {
         otp: impl Into<String>,
         transaction_id: impl Into<String>,
     ) -> Result<SubmitOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/otp", order_reference.into());
         let body = json!({
+            "orderReference": order_reference.into(),
             "otp": otp.into(),
             "transactionId": transaction_id.into(),
         });
-        let response = self.client.post(&path, &body, None)?;
+        let response = self.client.post("/v1/checkout/checkout-card-otp", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -120,8 +123,8 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<ResendOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/otp/resend", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/resend-otp", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -129,7 +132,7 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}/details", order_reference.into());
+        let path = format!("/v1/checkout/order/{}", order_reference.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -138,7 +141,7 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchFlashAccountResponse> {
-        let path = format!("/v1/checkout/orders/{}/flash-account", order_reference.into());
+        let path = format!("/v1/checkout/get-checkout-kta/{}", order_reference.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -147,8 +150,8 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<RequestUserOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/otp", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/user-card/auth", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -157,9 +160,11 @@ impl Checkout {
         order_reference: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<SubmitUserOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/otp/verify", order_reference.into());
-        let body = json!({ "otp": otp.into() });
-        let response = self.client.post(&path, &body, None)?;
+        let body = json!({
+            "orderReference": order_reference.into(),
+            "otp": otp.into(),
+        });
+        let response = self.client.post("/v1/checkout/user-card/saved-card/auth", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -167,23 +172,21 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchUserSavedCardsResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/cards", order_reference.into());
+        let path = format!("/v1/checkout/user-card/{}", order_reference.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub fn cancel_transaction(
         &self,
-        order_reference: impl Into<String>,
         transaction_id: impl Into<String>,
         force: Option<bool>,
     ) -> Result<CancelCheckoutTransactionResponse> {
-        let path = format!("/v1/checkout/orders/{}/transactions/{}/cancel", order_reference.into(), transaction_id.into());
-        let mut body = json!({});
-        if let Some(force) = force {
-            body["force"] = json!(force);
-        }
-        let response = self.client.post(&path, &body, None)?;
+        let body = json!({
+            "transactionId": transaction_id.into(),
+            "forceCancel": force.unwrap_or(false),
+        });
+        let response = self.client.post("/v1/checkout/transaction/cancel", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -191,8 +194,8 @@ impl Checkout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<CancelCheckoutOrderResponse> {
-        let path = format!("/v1/checkout/orders/{}/cancel", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/order/cancel", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 }
@@ -234,7 +237,7 @@ impl AsyncCheckout {
             body["metadata"] = metadata;
         }
 
-        let response = self.client.post("/v1/checkout/orders", &body, None).await?;
+        let response = self.client.post("/v1/checkout/order", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -242,8 +245,11 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionResponse> {
-        let path = format!("/v1/checkout/orders/{}/transaction", order_reference.into());
-        let response = self.client.get(&path, None).await?;
+        let params = vec![
+            ("idType", "ORDER_REFERENCE".to_string()),
+            ("id", order_reference.into()),
+        ];
+        let response = self.client.get("/v1/checkout/transaction", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -253,12 +259,12 @@ impl AsyncCheckout {
         amount: impl Into<String>,
         reason: impl Into<String>,
     ) -> Result<RefundCheckoutResponse> {
-        let path = format!("/v1/checkout/orders/{}/refund", order_reference.into());
         let body = json!({
+            "orderReference": order_reference.into(),
             "amount": amount.into(),
             "reason": reason.into(),
         });
-        let response = self.client.post(&path, &body, None).await?;
+        let response = self.client.post("/v1/checkout/refund", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -266,7 +272,7 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutOrderDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}", order_reference.into());
+        let path = format!("/v1/checkout/order/{}", order_reference.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -279,8 +285,8 @@ impl AsyncCheckout {
         save_card: Option<bool>,
         device_information: Option<serde_json::Value>,
     ) -> Result<SubmitCardDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}/card", order_reference.into());
         let mut body = json!({
+            "orderReference": order_reference.into(),
             "cardDetails": card_details.into(),
             "key": key.into(),
         });
@@ -290,7 +296,7 @@ impl AsyncCheckout {
         if let Some(device_information) = device_information {
             body["deviceInformation"] = device_information;
         }
-        let response = self.client.post(&path, &body, None).await?;
+        let response = self.client.post("/v1/checkout/checkout-card-detail", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -300,12 +306,12 @@ impl AsyncCheckout {
         otp: impl Into<String>,
         transaction_id: impl Into<String>,
     ) -> Result<SubmitOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/otp", order_reference.into());
         let body = json!({
+            "orderReference": order_reference.into(),
             "otp": otp.into(),
             "transactionId": transaction_id.into(),
         });
-        let response = self.client.post(&path, &body, None).await?;
+        let response = self.client.post("/v1/checkout/checkout-card-otp", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -313,8 +319,8 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<ResendOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/otp/resend", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/resend-otp", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -322,7 +328,7 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionDetailsResponse> {
-        let path = format!("/v1/checkout/orders/{}/details", order_reference.into());
+        let path = format!("/v1/checkout/order/{}", order_reference.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -331,7 +337,7 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchFlashAccountResponse> {
-        let path = format!("/v1/checkout/orders/{}/flash-account", order_reference.into());
+        let path = format!("/v1/checkout/get-checkout-kta/{}", order_reference.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -340,8 +346,8 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<RequestUserOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/otp", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/user-card/auth", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -350,9 +356,11 @@ impl AsyncCheckout {
         order_reference: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<SubmitUserOtpResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/otp/verify", order_reference.into());
-        let body = json!({ "otp": otp.into() });
-        let response = self.client.post(&path, &body, None).await?;
+        let body = json!({
+            "orderReference": order_reference.into(),
+            "otp": otp.into(),
+        });
+        let response = self.client.post("/v1/checkout/user-card/saved-card/auth", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -360,23 +368,21 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<FetchUserSavedCardsResponse> {
-        let path = format!("/v1/checkout/orders/{}/user/cards", order_reference.into());
+        let path = format!("/v1/checkout/user-card/{}", order_reference.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub async fn cancel_transaction(
         &self,
-        order_reference: impl Into<String>,
         transaction_id: impl Into<String>,
         force: Option<bool>,
     ) -> Result<CancelCheckoutTransactionResponse> {
-        let path = format!("/v1/checkout/orders/{}/transactions/{}/cancel", order_reference.into(), transaction_id.into());
-        let mut body = json!({});
-        if let Some(force) = force {
-            body["force"] = json!(force);
-        }
-        let response = self.client.post(&path, &body, None).await?;
+        let body = json!({
+            "transactionId": transaction_id.into(),
+            "forceCancel": force.unwrap_or(false),
+        });
+        let response = self.client.post("/v1/checkout/transaction/cancel", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -384,8 +390,8 @@ impl AsyncCheckout {
         &self,
         order_reference: impl Into<String>,
     ) -> Result<CancelCheckoutOrderResponse> {
-        let path = format!("/v1/checkout/orders/{}/cancel", order_reference.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let body = json!({ "orderReference": order_reference.into() });
+        let response = self.client.post("/v1/checkout/order/cancel", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 }

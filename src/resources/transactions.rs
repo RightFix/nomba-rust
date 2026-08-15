@@ -27,7 +27,7 @@ impl Transactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let path = format!("/v1/transactions/credit-debit/{}", account_id.into());
+        let path = format!("/v1/transactions/bank/{}", account_id.into());
         let response = self.client.get(&path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -44,7 +44,7 @@ impl Transactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/credit-debit/parent", Some(params))?;
+        let response = self.client.get("/v1/transactions/bank", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -61,7 +61,7 @@ impl Transactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let path = format!("/v1/transactions/{}", account_id.into());
+        let path = format!("/v1/transactions/accounts/{}", account_id.into());
         let response = self.client.get(&path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -95,7 +95,7 @@ impl Transactions {
         if let Some(transaction_type) = transaction_type {
             params.push(("type", transaction_type));
         }
-        let path = format!("/v1/transactions/filter/{}", account_id.into());
+        let path = format!("/v1/transactions/accounts/{}", account_id.into());
         let response = self.client.get(&path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -112,7 +112,7 @@ impl Transactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/parent", Some(params))?;
+        let response = self.client.get("/v1/transactions/accounts", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -144,7 +144,7 @@ impl Transactions {
         if let Some(transaction_type) = transaction_type {
             params.push(("type", transaction_type));
         }
-        let response = self.client.get("/v1/transactions/filter/parent", Some(params))?;
+        let response = self.client.get("/v1/transactions/accounts", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -153,8 +153,9 @@ impl Transactions {
         account_id: impl Into<String>,
         transaction_id: impl Into<String>,
     ) -> Result<FetchTransactionResponse> {
-        let path = format!("/v1/transactions/{}/{}", account_id.into(), transaction_id.into());
-        let response = self.client.get(&path, None)?;
+        let params = vec![("transactionRef", transaction_id.into())];
+        let path = format!("/v1/transactions/accounts/{}/single", account_id.into());
+        let response = self.client.get(&path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -162,8 +163,9 @@ impl Transactions {
         &self,
         transaction_id: impl Into<String>,
     ) -> Result<FetchTransactionResponse> {
-        let path = format!("/v1/transactions/parent/{}", transaction_id.into());
-        let response = self.client.get(&path, None)?;
+        let params = vec![("transactionRef", transaction_id.into())];
+        let path = "/v1/transactions/accounts/single";
+        let response = self.client.get(&path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -171,7 +173,7 @@ impl Transactions {
         &self,
         session_id: impl Into<String>,
     ) -> Result<ConfirmTransactionBySessionResponse> {
-        let path = format!("/v1/transactions/session/{}", session_id.into());
+        let path = format!("/v1/transactions/requery/{}", session_id.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -200,7 +202,7 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let path = format!("/v1/transactions/credit-debit/{}", account_id.into());
+        let path = format!("/v1/transactions/bank/{}", account_id.into());
         let response = self.client.get(&path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -217,7 +219,7 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/credit-debit/parent", Some(params)).await?;
+        let response = self.client.get("/v1/transactions/bank", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -234,7 +236,7 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let path = format!("/v1/transactions/{}", account_id.into());
+        let path = format!("/v1/transactions/accounts/{}", account_id.into());
         let response = self.client.get(&path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -268,7 +270,7 @@ impl AsyncTransactions {
         if let Some(transaction_type) = transaction_type {
             params.push(("type", transaction_type));
         }
-        let path = format!("/v1/transactions/filter/{}", account_id.into());
+        let path = format!("/v1/transactions/accounts/{}", account_id.into());
         let response = self.client.get(&path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -285,7 +287,7 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/parent", Some(params)).await?;
+        let response = self.client.get("/v1/transactions/accounts", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -317,7 +319,7 @@ impl AsyncTransactions {
         if let Some(transaction_type) = transaction_type {
             params.push(("type", transaction_type));
         }
-        let response = self.client.get("/v1/transactions/filter/parent", Some(params)).await?;
+        let response = self.client.get("/v1/transactions/accounts", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -326,8 +328,9 @@ impl AsyncTransactions {
         account_id: impl Into<String>,
         transaction_id: impl Into<String>,
     ) -> Result<FetchTransactionResponse> {
-        let path = format!("/v1/transactions/{}/{}", account_id.into(), transaction_id.into());
-        let response = self.client.get(&path, None).await?;
+        let params = vec![("transactionRef", transaction_id.into())];
+        let path = format!("/v1/transactions/accounts/{}/single", account_id.into());
+        let response = self.client.get(&path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -335,8 +338,9 @@ impl AsyncTransactions {
         &self,
         transaction_id: impl Into<String>,
     ) -> Result<FetchTransactionResponse> {
-        let path = format!("/v1/transactions/parent/{}", transaction_id.into());
-        let response = self.client.get(&path, None).await?;
+        let params = vec![("transactionRef", transaction_id.into())];
+        let path = "/v1/transactions/accounts/single";
+        let response = self.client.get(&path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -344,7 +348,7 @@ impl AsyncTransactions {
         &self,
         session_id: impl Into<String>,
     ) -> Result<ConfirmTransactionBySessionResponse> {
-        let path = format!("/v1/transactions/session/{}", session_id.into());
+        let path = format!("/v1/transactions/requery/{}", session_id.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }

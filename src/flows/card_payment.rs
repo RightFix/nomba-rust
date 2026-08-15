@@ -104,7 +104,7 @@ impl CardPaymentFlow {
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
             ))?;
-        self.charge.cancel_checkout_transaction(self.order_reference.clone(), transaction_id.clone(), Some(force))
+        self.charge.cancel_checkout_transaction(transaction_id.clone(), Some(force))
     }
 }
 
@@ -173,7 +173,7 @@ impl AsyncCardPaymentFlow {
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
             ))?;
-        self.charge.cancel_checkout_transaction(self.order_reference.clone(), transaction_id.clone(), Some(force)).await
+        self.charge.cancel_checkout_transaction(transaction_id.clone(), Some(force)).await
     }
 }
 

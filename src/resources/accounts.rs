@@ -49,8 +49,9 @@ impl Accounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<FetchAccountDetailsResponse> {
-        let path = format!("/v1/accounts/{}", account_id.into());
-        let response = self.client.get(&path, None)?;
+        let mut params = Vec::new();
+        params.push(("accountId", account_id.into()));
+        let response = self.client.get("/v1/accounts/sub-account-details", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -69,13 +70,13 @@ impl Accounts {
     }
 
     pub fn fetch_parent_account_balance(&self) -> Result<FetchAccountBalanceResponse> {
-        let response = self.client.get("/v1/accounts/parent/balance", None)?;
+        let response = self.client.get("/v1/accounts/balance", None)?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub fn suspend_account(&self, account_id: impl Into<String>) -> Result<SuspendAccountResponse> {
-        let path = format!("/v1/accounts/{}/suspend", account_id.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let path = format!("/v1/accounts/suspend/{}", account_id.into());
+        let response = self.client.put(&path, &json!({}), None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -83,8 +84,8 @@ impl Accounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<ReactivateAccountResponse> {
-        let path = format!("/v1/accounts/{}/reactivate", account_id.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let path = format!("/v1/accounts/reactivate/{}", account_id.into());
+        let response = self.client.put(&path, &json!({}), None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -100,7 +101,7 @@ impl Accounts {
     pub fn fetch_terminals_assigned_to_parent_account(
         &self,
     ) -> Result<NombaResponse<PaginatedResponse<TerminalAssignmentData>>> {
-        let response = self.client.get("/v1/accounts/parent/terminals", None)?;
+        let response = self.client.get("/v1/accounts/terminals", None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -108,7 +109,7 @@ impl Accounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<NombaResponse<PaginatedResponse<TerminalAssignmentData>>> {
-        let path = format!("/v1/accounts/{}/terminals/sub", account_id.into());
+        let path = format!("/v1/accounts/{}/terminals", account_id.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -119,8 +120,8 @@ impl Accounts {
         terminal_id: impl Into<String>,
         access: bool,
     ) -> Result<UpdateAccountAccessResponse> {
-        let path = format!("/v1/accounts/{}/terminals/{}/access", account_id.into(), terminal_id.into());
-        let body = json!({ "access": access });
+        let path = format!("/v1/accounts/{}/access", account_id.into());
+        let body = json!({ "terminalId": terminal_id.into(), "access": access });
         let response = self.client.put(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -171,8 +172,9 @@ impl AsyncAccounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<FetchAccountDetailsResponse> {
-        let path = format!("/v1/accounts/{}", account_id.into());
-        let response = self.client.get(&path, None).await?;
+        let mut params = Vec::new();
+        params.push(("accountId", account_id.into()));
+        let response = self.client.get("/v1/accounts/sub-account-details", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -191,13 +193,13 @@ impl AsyncAccounts {
     }
 
     pub async fn fetch_parent_account_balance(&self) -> Result<FetchAccountBalanceResponse> {
-        let response = self.client.get("/v1/accounts/parent/balance", None).await?;
+        let response = self.client.get("/v1/accounts/balance", None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub async fn suspend_account(&self, account_id: impl Into<String>) -> Result<SuspendAccountResponse> {
-        let path = format!("/v1/accounts/{}/suspend", account_id.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let path = format!("/v1/accounts/suspend/{}", account_id.into());
+        let response = self.client.put(&path, &json!({}), None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -205,8 +207,8 @@ impl AsyncAccounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<ReactivateAccountResponse> {
-        let path = format!("/v1/accounts/{}/reactivate", account_id.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let path = format!("/v1/accounts/reactivate/{}", account_id.into());
+        let response = self.client.put(&path, &json!({}), None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -222,7 +224,7 @@ impl AsyncAccounts {
     pub async fn fetch_terminals_assigned_to_parent_account(
         &self,
     ) -> Result<NombaResponse<PaginatedResponse<TerminalAssignmentData>>> {
-        let response = self.client.get("/v1/accounts/parent/terminals", None).await?;
+        let response = self.client.get("/v1/accounts/terminals", None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -230,7 +232,7 @@ impl AsyncAccounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<NombaResponse<PaginatedResponse<TerminalAssignmentData>>> {
-        let path = format!("/v1/accounts/{}/terminals/sub", account_id.into());
+        let path = format!("/v1/accounts/{}/terminals", account_id.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -241,8 +243,8 @@ impl AsyncAccounts {
         terminal_id: impl Into<String>,
         access: bool,
     ) -> Result<UpdateAccountAccessResponse> {
-        let path = format!("/v1/accounts/{}/terminals/{}/access", account_id.into(), terminal_id.into());
-        let body = json!({ "access": access });
+        let path = format!("/v1/accounts/{}/access", account_id.into());
+        let body = json!({ "terminalId": terminal_id.into(), "access": access });
         let response = self.client.put(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }

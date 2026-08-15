@@ -31,8 +31,10 @@ impl CableTv {
     /// # Returns
     /// A [`CableTvLookupResponse`] with customer details.
     pub fn lookup(&self, provider: impl Into<String>, smart_card_number: impl Into<String>) -> Result<CableTvLookupResponse> {
-        let path = format!("/v1/cabletv/lookup/{}/{}", provider.into(), smart_card_number.into());
-        let response = self.client.get(&path, None)?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("smartCardNumber", smart_card_number.into()));
+        let response = self.client.get("/v1/bill/cabletv/lookup", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -67,7 +69,7 @@ impl CableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/cabletv/parent", &body, None)?;
+        let response = self.client.post("/v1/bill/cabletv", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -104,7 +106,7 @@ impl CableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/cabletv/{}", account_id.into());
+        let path = format!("/v1/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -152,8 +154,10 @@ impl AsyncCableTv {
 
     /// Looks up a cable TV smart card number.
     pub async fn lookup(&self, provider: impl Into<String>, smart_card_number: impl Into<String>) -> Result<CableTvLookupResponse> {
-        let path = format!("/v1/cabletv/lookup/{}/{}", provider.into(), smart_card_number.into());
-        let response = self.client.get(&path, None).await?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("smartCardNumber", smart_card_number.into()));
+        let response = self.client.get("/v1/bill/cabletv/lookup", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -177,7 +181,7 @@ impl AsyncCableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/cabletv/parent", &body, None).await?;
+        let response = self.client.post("/v1/bill/cabletv", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -202,7 +206,7 @@ impl AsyncCableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/cabletv/{}", account_id.into());
+        let path = format!("/v1/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }

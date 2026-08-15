@@ -30,7 +30,7 @@ impl Terminals {
         terminal_id: impl Into<String>,
     ) -> Result<AssignTerminalResponse> {
         let body = json!({ "terminalId": terminal_id.into() });
-        let response = self.client.post("/v1/terminals/assign/parent", &body, None)?;
+        let response = self.client.post("/v1/terminals/assign", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -39,8 +39,9 @@ impl Terminals {
         account_id: impl Into<String>,
         terminal_id: impl Into<String>,
     ) -> Result<UnassignTerminalResponse> {
-        let path = format!("/v1/terminals/unassign/{}/{}", account_id.into(), terminal_id.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let path = format!("/v1/terminals/unassign/{}", account_id.into());
+        let body = json!({ "terminalId": terminal_id.into() });
+        let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -48,8 +49,9 @@ impl Terminals {
         &self,
         terminal_id: impl Into<String>,
     ) -> Result<UnassignTerminalResponse> {
-        let path = format!("/v1/terminals/unassign/parent/{}", terminal_id.into());
-        let response = self.client.post(&path, &json!({}), None)?;
+        let path = "/v1/terminals/unassign".to_string();
+        let body = json!({ "terminalId": terminal_id.into() });
+        let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -63,22 +65,13 @@ impl Terminals {
         customer_phone: Option<String>,
         customer_email: Option<String>,
     ) -> Result<SendPaymentRequestResponse> {
+        let path = format!("/v1/terminals/payment-request/{}", terminal_id.into());
         let mut body = json!({
-            "terminalId": terminal_id.into(),
             "amount": amount,
             "currency": currency.into(),
             "orderReference": order_reference.into(),
         });
-        if let Some(customer_name) = customer_name {
-            body["customerName"] = json!(customer_name);
-        }
-        if let Some(customer_phone) = customer_phone {
-            body["customerPhone"] = json!(customer_phone);
-        }
-        if let Some(customer_email) = customer_email {
-            body["customerEmail"] = json!(customer_email);
-        }
-        let response = self.client.post("/v1/terminals/payment", &body, None)?;
+        let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 }
@@ -109,7 +102,7 @@ impl AsyncTerminals {
         terminal_id: impl Into<String>,
     ) -> Result<AssignTerminalResponse> {
         let body = json!({ "terminalId": terminal_id.into() });
-        let response = self.client.post("/v1/terminals/assign/parent", &body, None).await?;
+        let response = self.client.post("/v1/terminals/assign", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -118,8 +111,9 @@ impl AsyncTerminals {
         account_id: impl Into<String>,
         terminal_id: impl Into<String>,
     ) -> Result<UnassignTerminalResponse> {
-        let path = format!("/v1/terminals/unassign/{}/{}", account_id.into(), terminal_id.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let path = format!("/v1/terminals/unassign/{}", account_id.into());
+        let body = json!({ "terminalId": terminal_id.into() });
+        let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -127,8 +121,9 @@ impl AsyncTerminals {
         &self,
         terminal_id: impl Into<String>,
     ) -> Result<UnassignTerminalResponse> {
-        let path = format!("/v1/terminals/unassign/parent/{}", terminal_id.into());
-        let response = self.client.post(&path, &json!({}), None).await?;
+        let path = "/v1/terminals/unassign".to_string();
+        let body = json!({ "terminalId": terminal_id.into() });
+        let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -142,22 +137,13 @@ impl AsyncTerminals {
         customer_phone: Option<String>,
         customer_email: Option<String>,
     ) -> Result<SendPaymentRequestResponse> {
+        let path = format!("/v1/terminals/payment-request/{}", terminal_id.into());
         let mut body = json!({
-            "terminalId": terminal_id.into(),
             "amount": amount,
             "currency": currency.into(),
             "orderReference": order_reference.into(),
         });
-        if let Some(customer_name) = customer_name {
-            body["customerName"] = json!(customer_name);
-        }
-        if let Some(customer_phone) = customer_phone {
-            body["customerPhone"] = json!(customer_phone);
-        }
-        if let Some(customer_email) = customer_email {
-            body["customerEmail"] = json!(customer_email);
-        }
-        let response = self.client.post("/v1/terminals/payment", &body, None).await?;
+        let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 }

@@ -15,13 +15,15 @@ impl Electricity {
     }
 
     pub fn fetch_providers(&self) -> Result<FetchElectricityProvidersResponse> {
-        let response = self.client.get("/v1/electricity/providers", None)?;
+        let response = self.client.get("/v1/bill/electricity/discos", None)?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub fn customer_lookup(&self, provider: impl Into<String>, meter_number: impl Into<String>) -> Result<ElectricityCustomerLookupResponse> {
-        let path = format!("/v1/electricity/lookup/{}/{}", provider.into(), meter_number.into());
-        let response = self.client.get(&path, None)?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("meterNumber", meter_number.into()));
+        let response = self.client.get("/v1/bill/electricity/lookup", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -46,7 +48,7 @@ impl Electricity {
         if let Some(meter_type) = meter_type {
             body["meterType"] = json!(meter_type);
         }
-        let response = self.client.post("/v1/electricity/parent", &body, None)?;
+        let response = self.client.post("/v1/bill/electricity", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -72,7 +74,7 @@ impl Electricity {
         if let Some(meter_type) = meter_type {
             body["meterType"] = json!(meter_type);
         }
-        let path = format!("/v1/electricity/{}", account_id.into());
+        let path = format!("/v1/bill/electricity/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -89,13 +91,15 @@ impl AsyncElectricity {
     }
 
     pub async fn fetch_providers(&self) -> Result<FetchElectricityProvidersResponse> {
-        let response = self.client.get("/v1/electricity/providers", None).await?;
+        let response = self.client.get("/v1/bill/electricity/discos", None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub async fn customer_lookup(&self, provider: impl Into<String>, meter_number: impl Into<String>) -> Result<ElectricityCustomerLookupResponse> {
-        let path = format!("/v1/electricity/lookup/{}/{}", provider.into(), meter_number.into());
-        let response = self.client.get(&path, None).await?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("meterNumber", meter_number.into()));
+        let response = self.client.get("/v1/bill/electricity/lookup", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -120,7 +124,7 @@ impl AsyncElectricity {
         if let Some(meter_type) = meter_type {
             body["meterType"] = json!(meter_type);
         }
-        let response = self.client.post("/v1/electricity/parent", &body, None).await?;
+        let response = self.client.post("/v1/bill/electricity", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -146,7 +150,7 @@ impl AsyncElectricity {
         if let Some(meter_type) = meter_type {
             body["meterType"] = json!(meter_type);
         }
-        let path = format!("/v1/electricity/{}", account_id.into());
+        let path = format!("/v1/bill/electricity/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }

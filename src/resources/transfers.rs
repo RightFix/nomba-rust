@@ -33,7 +33,7 @@ impl Transfers {
         if let Some(customer_name) = customer_name {
             body["customerName"] = json!(customer_name);
         }
-        let response = self.client.post("/v1/transfers/bank", &body, None)?;
+        let response = self.client.post("/v2/transfers/bank", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -57,7 +57,7 @@ impl Transfers {
         if let Some(customer_name) = customer_name {
             body["customerName"] = json!(customer_name);
         }
-        let path = format!("/v1/transfers/bank/{}", account_id.into());
+        let path = format!("/v2/transfers/bank/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -75,7 +75,7 @@ impl Transfers {
             "narration": narration.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let response = self.client.post("/v1/transfers/wallet", &body, None)?;
+        let response = self.client.post("/v2/transfers/wallet", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -93,7 +93,7 @@ impl Transfers {
             "narration": narration.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let path = format!("/v1/transfers/wallet/{}", account_id.into());
+        let path = format!("/v2/transfers/wallet/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -103,8 +103,8 @@ impl Transfers {
         transaction_id: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<AuthorizeTransferResponse> {
-        let path = format!("/v1/transfers/{}/authorize", transaction_id.into());
-        let body = json!({ "otp": otp.into() });
+        let path = "/v1/global-payout/transfer/authorize".to_string();
+        let body = json!({ "transferId": transaction_id.into(), "otp": otp.into() });
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -114,8 +114,8 @@ impl Transfers {
         transaction_id: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<AuthorizeExchangeResponse> {
-        let path = format!("/v1/transfers/{}/exchange/authorize", transaction_id.into());
-        let body = json!({ "otp": otp.into() });
+        let path = "/v1/global-payout/exchange/authorize".to_string();
+        let body = json!({ "transferId": transaction_id.into(), "otp": otp.into() });
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -131,12 +131,12 @@ impl Transfers {
             "fromCurrency": from_currency.into(),
             "toCurrency": to_currency.into(),
         });
-        let response = self.client.post("/v1/transfers/convert", &body, None)?;
+        let response = self.client.post("/v1/global-payout/money/convert", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub fn fetch_exchange_rates(&self) -> Result<FetchExchangeRatesResponse> {
-        let response = self.client.get("/v1/transfers/rates", None)?;
+        let response = self.client.get("/v1/global-payout/exchange-rates", None)?;
         Ok(serde_json::from_value(response)?)
     }
 }
@@ -170,7 +170,7 @@ impl AsyncTransfers {
         if let Some(customer_name) = customer_name {
             body["customerName"] = json!(customer_name);
         }
-        let response = self.client.post("/v1/transfers/bank", &body, None).await?;
+        let response = self.client.post("/v2/transfers/bank", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -194,7 +194,7 @@ impl AsyncTransfers {
         if let Some(customer_name) = customer_name {
             body["customerName"] = json!(customer_name);
         }
-        let path = format!("/v1/transfers/bank/{}", account_id.into());
+        let path = format!("/v2/transfers/bank/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -212,7 +212,7 @@ impl AsyncTransfers {
             "narration": narration.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let response = self.client.post("/v1/transfers/wallet", &body, None).await?;
+        let response = self.client.post("/v2/transfers/wallet", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -230,7 +230,7 @@ impl AsyncTransfers {
             "narration": narration.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let path = format!("/v1/transfers/wallet/{}", account_id.into());
+        let path = format!("/v2/transfers/wallet/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -240,8 +240,8 @@ impl AsyncTransfers {
         transaction_id: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<AuthorizeTransferResponse> {
-        let path = format!("/v1/transfers/{}/authorize", transaction_id.into());
-        let body = json!({ "otp": otp.into() });
+        let path = "/v1/global-payout/transfer/authorize".to_string();
+        let body = json!({ "transferId": transaction_id.into(), "otp": otp.into() });
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -251,8 +251,8 @@ impl AsyncTransfers {
         transaction_id: impl Into<String>,
         otp: impl Into<String>,
     ) -> Result<AuthorizeExchangeResponse> {
-        let path = format!("/v1/transfers/{}/exchange/authorize", transaction_id.into());
-        let body = json!({ "otp": otp.into() });
+        let path = "/v1/global-payout/exchange/authorize".to_string();
+        let body = json!({ "transferId": transaction_id.into(), "otp": otp.into() });
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -268,12 +268,12 @@ impl AsyncTransfers {
             "fromCurrency": from_currency.into(),
             "toCurrency": to_currency.into(),
         });
-        let response = self.client.post("/v1/transfers/convert", &body, None).await?;
+        let response = self.client.post("/v1/global-payout/money/convert", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub async fn fetch_exchange_rates(&self) -> Result<FetchExchangeRatesResponse> {
-        let response = self.client.get("/v1/transfers/rates", None).await?;
+        let response = self.client.get("/v1/global-payout/exchange-rates", None).await?;
         Ok(serde_json::from_value(response)?)
     }
 }

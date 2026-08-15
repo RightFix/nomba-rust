@@ -15,13 +15,15 @@ impl Betting {
     }
 
     pub fn fetch_providers(&self) -> Result<FetchBettingProvidersResponse> {
-        let response = self.client.get("/v1/betting/providers", None)?;
+        let response = self.client.get("/v1/bill/betting/providers", None)?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub fn customer_lookup(&self, provider: impl Into<String>, customer_id: impl Into<String>) -> Result<BettingCustomerLookupResponse> {
-        let path = format!("/v1/betting/lookup/{}/{}", provider.into(), customer_id.into());
-        let response = self.client.get(&path, None)?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("customerId", customer_id.into()));
+        let response = self.client.get("/v1/bill/betting/lookup", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -42,7 +44,7 @@ impl Betting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/betting/parent", &body, None)?;
+        let response = self.client.post("/v1/bill/betting", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -64,7 +66,7 @@ impl Betting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/betting/{}", account_id.into());
+        let path = format!("/v1/bill/betting/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -81,13 +83,15 @@ impl AsyncBetting {
     }
 
     pub async fn fetch_providers(&self) -> Result<FetchBettingProvidersResponse> {
-        let response = self.client.get("/v1/betting/providers", None).await?;
+        let response = self.client.get("/v1/bill/betting/providers", None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
     pub async fn customer_lookup(&self, provider: impl Into<String>, customer_id: impl Into<String>) -> Result<BettingCustomerLookupResponse> {
-        let path = format!("/v1/betting/lookup/{}/{}", provider.into(), customer_id.into());
-        let response = self.client.get(&path, None).await?;
+        let mut params = Vec::new();
+        params.push(("provider", provider.into()));
+        params.push(("customerId", customer_id.into()));
+        let response = self.client.get("/v1/bill/betting/lookup", Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -108,7 +112,7 @@ impl AsyncBetting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/betting/parent", &body, None).await?;
+        let response = self.client.post("/v1/bill/betting", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -130,7 +134,7 @@ impl AsyncBetting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/betting/{}", account_id.into());
+        let path = format!("/v1/bill/betting/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }

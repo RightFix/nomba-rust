@@ -1,0 +1,59 @@
+[package]
+name = "nomba"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT"
+description = "Unofficial Rust SDK for the Nomba payments API"
+repository = "https://github.com/RightFix/nomba"
+readme = "README.md"
+keywords = ["nomba", "payments", "nigeria", "fintech", "sdk"]
+categories = ["api-bindings", "web-programming", "finance"]
+
+[features]
+default = ["blocking", "async"]
+blocking = ["reqwest/blocking"]
+async = ["reqwest", "tokio/full"]
+validation = ["openapiv3"]
+
+[dependencies]
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], optional = true }
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_with = "3.0"
+
+# Error handling
+thiserror = "1.0"
+
+# Async utilities
+futures = "0.3"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# HMAC for webhooks
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+subtle = "2.5"
+rand = "0.8"
+
+# OpenAPI parsing (for validation)
+openapiv3 = { version = "2.2", optional = true }
+
+[build-dependencies]
+serde_json = "1.0"
+openapiv3 = "2.2"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.0"
+wiremock = "0.6"
+
+[profile.release]
+lto = true
+codegen-units = 1

@@ -1,5 +1,7 @@
 # Nomba Rust SDK
 
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+
 Unofficial Rust SDK for the [Nomba](https://developer.nomba.com) payments API.
 
 ## Features
@@ -401,7 +403,7 @@ validate_body("post", "/v1/accounts/virtual", &body)?;
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+AGPL-3.0 License - see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 

@@ -1,0 +1,310 @@
+GNU AFFERO GENERAL PUBLIC LICENSE
+   Version 3, 19 November 2007
+
+Copyright (C) 2026 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+                            Preamble
+
+The GNU Affero General Public License is a free, copyleft license for
+software and other works, specifically designed to ensure cooperation
+with the community in the case of network server use.  The license is
+affero (AGPL) copyleft version of the GPL.  The AGPL was written for
+authors who want to make sure that when users run modified versions of
+the software on a server, those users also get the source code.
+
+When we speak of free software, we are referring to freedom, not
+price.  Our General Public Licenses are designed to make sure that you
+have the freedom to distribute copies of free software (and charge for
+them if you wish), that you receive source code or can get it if you
+want it, that you can change the software or use pieces of it in new
+free programs, and that you know you can do these things.
+
+Developers that use our General Public Licenses protect your rights
+with two steps: (1) assert copyright on the software, and (2) offer
+you this License which gives you legal permission to copy, distribute
+and/or modify the software.
+
+A license is "copyleft" when the derivative works of that license must
+also be available under the same license.  The GNU General Public License
+is copyleft; the GNU Lesser General Public License (LGPL) is less
+copyleft.  What's more, the AGPL ensures that the source code for a
+modified version of the software is made available to the users of that
+version, not just to the people who received the software directly from
+you.
+
+The precise terms and conditions for copying, distribution and
+modification follow.
+
+                    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+                    0. Definitions.
+
+" This License" refers to version 3 of the GNU Affero General Public License.
+
+"Copyright" also means copyright-like laws that apply to other kinds of
+works, such as semiconductor masks.
+
+"A "License" means this GNU Affero General Public License.
+
+"the "Program" refers to any software or other work licensed under
+these terms.  Each licensee is addressed as "you".  "To "receive" a
+work is to receive as its contained in a physical medium or to receive
+it electronically.
+
+" Source Code" for a work means the preferred form of the work for
+making modifications to it.  "Object code" means any non-source
+form of the work.
+
+A "Work that uses the Library" is a work that is based on the Library
+or that is derived from the Library, where the work is not a separate
+work that is merely linked to the Library.  For the purposes of this
+License, a work that uses the Library is not a separate work if it
+either uses the Library's public API by being generated from the
+Library's headers, or it is a work that is a derivative work of the Library.
+
+" a covered work" means either the unmodified Program or a work based
+on the Program.
+
+" Propagate" a work means to do anything with it that would make you
+directly or indirectly liable for infringement under applicable copyright
+law, except executing it on a computer or modifying a private copy.  It
+includes copying, distribution (with or for a profit), making available
+to the public, and in some countries other activities as well.
+
+" Mere aggregation" of a work based on the Library with other separate
+works on a volume of a storage or distribution medium is not as such a
+propagation of the other works.
+
+" User" if the running of the Program is on a server, the meaning of
+"User" is the remote user executing the Program on the server, not the
+operator of the server.
+
+" User Product" means either (1) a consumer product, which means any
+tangible personal property which is normally used for personal, family,
+or household purposes, or (2) anything designed for incorporation into
+a consumer product.
+
+" Installation Information" for a User Product means any methods, 
+procedures, authorization keys, or other information required to install 
+and execute modified versions of a covered work in that User Product from 
+its modified form.  The requirement to provide Installation Information 
+does not include a requirement to provide support service, warranty, or 
+update assistance.
+
+" Running" includes but is not limited to loading or installing, 
+explicit formatting"
+
+                    1.  Source Code.
+
+        The source code for a work means the preferred form of the work
+for making modifications to it.  It must include all the relevant
+source code and any other information necessary to modify the work
+and compile it.  It must not be limited to a particular environment
+or to particular facilities.  For example, if the work is a program,
+the source code must include the source code for all the modules it
+contains, plus any associated interface definition files, plus the
+scripts used to control compilation and installation of the program.
+
+        The source code for a work must be made available to the same
+persons to whom you make the work available under the terms of this
+License.  You must cause all persons to whom you convey or otherwise
+make available the unmodified Program or a covered work, to receive
+the source code on a medium customarily used for software interchange.
+
+If you distribute the program (or any work based on the program) as
+part of a user product, and the user product depends on the unmodified
+program or a covered work to function, you must cause the source code
+to be made available to the user through a network server at no charge
+to the user, using one of the methods in this License.
+
+                    2.  Basic Permissions.
+
+        All rights granted under this License are perpetual and not
+revocable.  This License applies to the work as a whole, and the
+work to be covered by this License must have been licensed under the
+terms of this License.  No further restrictions are granted beyond
+those set forth in this License.
+
+        The rights you receive under this License are not affected by the
+license status of the work you create.  If the work you create is a
+covered work, the rights you receive under this License are the same
+as the rights you would receive if the original work were also a
+covered work.
+
+        If you convey a covered work, you may do so under the terms of
+this License, or you may convey it under the terms of version 3 of the
+GNU General Public License without the "Affero" requirement, or you
+may convey it under the terms of version 4 of the GNU General Public
+License.  However, if you make modifications to a covered work, you
+may convey the modified version under the terms of this License or under
+the terms of version 3 of the GNU General Public License without the
+"Affero" requirement.
+
+        Conveying under any other circumstances is permitted only under
+the express terms of this License.  Mere aggregation of a work based
+on the Library with other separate works on a volume of a storage or
+distribution medium does not as such cause the other works to be
+covered works of this License.
+
+                    3.  Propagation.
+
+        You may propagate or convey a covered work in accordance with
+the terms of this License.  You may also propagate or convey a covered
+work under the terms of version 3 of the GNU General Public License
+without the "Affero" requirement, or under the terms of version 4 of the
+GNU General Public License.
+
+        Propagating a covered work under this License means:
+
+        (a) conveying the original version of the covered work, unmodified,
+        and complete, to all third parties to whom you convey the work
+        under the terms of this License, and
+        (b) propagating a modified version of the covered work, which you
+        must cause all persons who receive the modified version to
+        receive it under the terms of this License, and
+        (c) propagating a covered work under the terms of version 3 of the
+        GNU General Public License without the "Affero" requirement, or
+        under the terms of version 4 of the GNU General Public License.
+
+                    4.  No Additional Restrictions.
+
+        You may not impose any further restrictions on the exercise of
+the rights granted or affirmed under this License.  You are not
+required to accept any License to do so, but for acceptance of this
+License, you may not convey the work except under the terms of this
+License.  You may not convey the work under any other terms or
+conditions, and you may not impose any further restrictions on the
+rights granted or affirmed under this License.  However, nothing is
+prevented from your asserting or affirming, under applicable patent
+law, a claim of patent infringement by the program.
+
+        You may not impose a licensing fee for the right to use or
+convey a covered work under the terms of this License.  However, you
+may charge a fee for the physical act of transferring a copy, and you
+may at your option offer warranty protection in exchange for a fee.
+
+                    5.  Conveying Copies.
+
+        You may convey unmodified copies of the Program as received, in
+any medium, provided that you conspicuously and appropriately publish
+on each copy an appropriate copyright notice and the notice of this
+License, and keep intact all the notices referring to this License
+and to the absence of any warranty.  You may add other material,
+documents, or works to the same distribution medium if that material,
+documents, or works are not themselves covered works under this
+License.  You may convey the Program in object code or executable form
+under the terms of this License, provided that you also convey the
+source code under the terms of this License, as described in Section 6.
+
+                    6.  Offering Source Code from a Distributor.
+
+        You may convey a covered work in object code or executable form:
+        (a) under the terms of this License, provided that you also
+        convey the source code under the terms of this License in one
+        of the following ways:
+            (1) Convey the source code in a physical medium customarily
+            used for software interchange, under the terms of this
+            License, and accept a reasonable charge for the physical act
+            of transferring the source, provided that you, in good
+            faith, represent that the source code conveyed was
+            conveyed under the terms of this License; or
+            (2) Convey the source code to users from a server at no
+            charge, using one of the following methods:
+                (a) Convey the source code on a durable physical medium
+                customarily used for software interchange, under the
+                terms of this License, and at no charge to the recipient;
+                or
+                (b) Convey the source code from a server at no charge
+                to the recipient; or
+                (c) Make available the source code from a server at no
+                charge to the recipient, provided that you, in good
+                faith, represent that the source code conveyed was
+                conveyed under the terms of this License; or
+            (3) Convey the source code to users from a server at no
+            charge, using one of the following methods:
+                (a) Convey the source code on a durable physical medium
+                customarily used for software interchange, under the
+                terms of this License, and at no charge to the recipient;
+                or
+                (b) Convey the source code from a server at no charge
+                to the recipient; or
+                (c) Make available the source code from a server at no
+                charge to the recipient, provided that you, in good
+                faith, represent that the source code conveyed was
+                conveyed under the terms of this License; or
+        (b) under the terms of version 3 of the GNU General Public
+        License without the "Affero" requirement, or
+        (c) under the terms of version 4 of the GNU General Public
+        License.
+
+        In addition, you must provide the Installation Information
+required to install and execute modified versions of the covered
+work in a User Product from its modified form, as described in
+Section 8.  You must also provide the Installation Information
+to all third parties to whom you convey the covered work, under
+the terms of this License.  These requirements apply to the
+modified work in its entirety.  If you cannot provide the
+Installation Information because you do not control the installation
+of the modified work, you may not convey the covered work under
+the terms of this License.  This section only applies if the
+modified work is a User Product.
+
+                    7.  Additional Terms.
+
+        If you modify the Program, and you convey the modified version,
+        you must propagate the modified version under the terms of this
+License.  In addition, you must cause all persons who receive the
+modified version to receive it under the terms of this License, and
+you must cause all persons who receive the modified version to receive
+the Installation Information, as described in Section 8.
+
+        You may add additional terms to a covered work, provided that
+they are permitted by the terms of this License and the GNU General
+Public License.
+
+                    8.  Installation Information.
+
+        You must provide Installation Information to all recipients of
+the covered work, under the terms of this License.  You must also
+provide Installation Information to all third parties to whom you
+convey the covered work, under the terms of this License.  These
+requirements apply to the modified work in its entirety.  If you
+cannot provide the Installation Information because you do not
+control the installation of the modified work, you may not convey
+the covered work under the terms of this License.  This section only
+applies if the modified work is a User Product.
+
+                    9.  End of Terms.
+
+        If you convey a covered work under this License and the
+conveyance is not in accordance with the terms of this License, then
+your rights under this License terminate automatically.  However, if
+you cease the violation, then your rights under this License
+automatically reinstate.
+
+        Termination of your rights under this License does not terminate
+the licenses of parties who have received copies from you under this
+License.  If your rights have been terminated and not reinstated, you
+do not have the right to convey the covered work except under the
+terms of this License, and termination of your rights does not
+excuse any infringement.
+
+                    10.  No Warranty.
+
+        The Program is provided without any warranty of any kind, either
+expressed or implied, including but not limited to the implied
+warranties of merchantability and fitness for a particular purpose.
+The entire risk as to the quality and performance of the Program is
+with you.  Should the Program prove defective, you assume the cost of
+all necessary servicing, repair or correction.
+
+        Under no circumstances, unless required by applicable law or
+agreed to in writing, will any contributor be liable to you for
+direct, indirect, incidental, special, consequential, or incidental
+damages arising out of the use or inability to use the Program, even
+if such contributor has been advised of the possibility of such
+damages.
+
+                        END OF TERMS AND CONDITIONS

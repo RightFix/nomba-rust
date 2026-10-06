@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::http_client::{BlockingNombaClient, NombaClient, NombaClientConfig};
-use crate::resources::{Auth, AsyncAuth, *};
+use crate::resources::{AsyncAuth, Auth, *};
 
 pub struct Nomba {
     client: BlockingNombaClient,
@@ -27,11 +27,8 @@ impl Nomba {
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
     ) -> Result<Self> {
-        let config = NombaClientConfig::new(
-            client_id.into(),
-            client_secret.into(),
-            account_id.into(),
-        );
+        let config =
+            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into());
         let client = BlockingNombaClient::new(config)?;
         Self::from_client(client)
     }
@@ -41,12 +38,9 @@ impl Nomba {
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
     ) -> Result<Self> {
-        let config = NombaClientConfig::new(
-            client_id.into(),
-            client_secret.into(),
-            account_id.into(),
-        )
-        .sandbox(true);
+        let config =
+            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into())
+                .sandbox(true);
         let client = BlockingNombaClient::new(config)?;
         Self::from_client(client)
     }
@@ -93,7 +87,10 @@ impl Nomba {
         })
     }
 
-    pub fn card_payment(&self, order_reference: impl Into<String>) -> crate::flows::CardPaymentFlow {
+    pub fn card_payment(
+        &self,
+        order_reference: impl Into<String>,
+    ) -> crate::flows::CardPaymentFlow {
         crate::flows::CardPaymentFlow::new(self.charge.clone(), order_reference.into())
     }
 }
@@ -123,11 +120,8 @@ impl AsyncNomba {
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
     ) -> Result<Self> {
-        let config = NombaClientConfig::new(
-            client_id.into(),
-            client_secret.into(),
-            account_id.into(),
-        );
+        let config =
+            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into());
         let client = NombaClient::new(config)?;
         Self::from_client(client).await
     }
@@ -137,12 +131,9 @@ impl AsyncNomba {
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
     ) -> Result<Self> {
-        let config = NombaClientConfig::new(
-            client_id.into(),
-            client_secret.into(),
-            account_id.into(),
-        )
-        .sandbox(true);
+        let config =
+            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into())
+                .sandbox(true);
         let client = NombaClient::new(config)?;
         Self::from_client(client).await
     }
@@ -203,9 +194,13 @@ mod tests {
 
     #[test]
     fn test_client_config() {
-        let config = NombaClientConfig::new("test_id".into(), "test_secret".into(), "test_account".into())
-            .sandbox(true)
-            .timeout(std::time::Duration::from_secs(60));
+        let config = NombaClientConfig::new(
+            "test_id".into(),
+            "test_secret".into(),
+            "test_account".into(),
+        )
+        .sandbox(true)
+        .timeout(std::time::Duration::from_secs(60));
         assert!(config.sandbox);
         assert_eq!(config.timeout, std::time::Duration::from_secs(60));
     }

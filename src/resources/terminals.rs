@@ -1,5 +1,5 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -55,21 +55,23 @@ impl Terminals {
         Ok(serde_json::from_value(response)?)
     }
 
+    /// Triggers a payment request on a Nomba terminal.
+    ///
+    /// Calls `POST /v1/terminals/payment-request/{terminalId}` with
+    /// `merchantTxRef`, `amount` (smallest currency unit, e.g. kobo), and
+    /// `currency` (ISO 4217).
     pub fn send_payment_request(
         &self,
         terminal_id: impl Into<String>,
+        merchant_tx_ref: impl Into<String>,
         amount: f64,
         currency: impl Into<String>,
-        order_reference: impl Into<String>,
-        customer_name: Option<String>,
-        customer_phone: Option<String>,
-        customer_email: Option<String>,
     ) -> Result<SendPaymentRequestResponse> {
         let path = format!("/v1/terminals/payment-request/{}", terminal_id.into());
-        let mut body = json!({
+        let body = json!({
+            "merchantTxRef": merchant_tx_ref.into(),
             "amount": amount,
             "currency": currency.into(),
-            "orderReference": order_reference.into(),
         });
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
@@ -102,7 +104,10 @@ impl AsyncTerminals {
         terminal_id: impl Into<String>,
     ) -> Result<AssignTerminalResponse> {
         let body = json!({ "terminalId": terminal_id.into() });
-        let response = self.client.post("/v1/terminals/assign", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/terminals/assign", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -127,21 +132,21 @@ impl AsyncTerminals {
         Ok(serde_json::from_value(response)?)
     }
 
+    /// Triggers a payment request on a Nomba terminal.
+    ///
+    /// See [`Terminals::send_payment_request`] for details.
     pub async fn send_payment_request(
         &self,
         terminal_id: impl Into<String>,
+        merchant_tx_ref: impl Into<String>,
         amount: f64,
         currency: impl Into<String>,
-        order_reference: impl Into<String>,
-        customer_name: Option<String>,
-        customer_phone: Option<String>,
-        customer_email: Option<String>,
     ) -> Result<SendPaymentRequestResponse> {
         let path = format!("/v1/terminals/payment-request/{}", terminal_id.into());
-        let mut body = json!({
+        let body = json!({
+            "merchantTxRef": merchant_tx_ref.into(),
             "amount": amount,
             "currency": currency.into(),
-            "orderReference": order_reference.into(),
         });
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)

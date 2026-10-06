@@ -2,8 +2,8 @@
 //!
 //! Provides methods for cross-border payments, currency exchange, and wallet management.
 
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde::{Deserialize, Serialize};
@@ -31,14 +31,14 @@ impl GlobalPayout {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let accounts = nomba.global_payout.fetch_accounts()?;
     /// for wallet in accounts.data {
     ///     println!("Wallet: {} ({}) - Balance: {:?}", wallet.name, wallet.currency, wallet.balance);
     /// }
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     pub fn fetch_accounts(&self) -> Result<FetchGlobalPayoutAccountsResponse> {
         let response = self.client.get("/v1/global-payout/accounts", None)?;
@@ -58,12 +58,12 @@ impl GlobalPayout {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let wallet = nomba.global_payout.fetch_account("66bc8c0e054dfe06b69a840a")?;
     /// println!("Wallet: {} - Available: {:?}", wallet.data.name, wallet.data.available_balance);
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     pub fn fetch_account(
         &self,
@@ -106,7 +106,7 @@ impl GlobalPayout {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let transfer = nomba.global_payout.authorize_transfer(
@@ -116,7 +116,7 @@ impl GlobalPayout {
     ///     Some("Family support".to_string()), None, None, None, None, None, None,
     /// )?;
     /// println!("Transfer: {}", transfer.data.wt_transaction_id);
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     #[allow(clippy::too_many_arguments)]
     pub fn authorize_transfer(
@@ -188,7 +188,9 @@ impl GlobalPayout {
         if let Some(v) = beneficiary {
             body["beneficiary"] = json!(v);
         }
-        let response = self.client.post("/v1/global-payout/transfer/authorize", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/global-payout/transfer/authorize", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -212,7 +214,7 @@ impl GlobalPayout {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let exchange = nomba.global_payout.authorize_exchange(
@@ -220,7 +222,7 @@ impl GlobalPayout {
     ///     "US".to_string(), "CD".to_string(), Some("Salary conversion".to_string()), None,
     /// )?;
     /// println!("Exchange: {}", exchange.data.wt_transaction_id);
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     pub fn authorize_exchange(
         &self,
@@ -249,7 +251,9 @@ impl GlobalPayout {
         if let Some(v) = locked_exchange_rate_id {
             body["lockedExchangeRateId"] = json!(v);
         }
-        let response = self.client.post("/v1/global-payout/exchange/authorize", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/global-payout/exchange/authorize", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -265,6 +269,136 @@ impl GlobalPayout {
         transaction_id: impl Into<String>,
     ) -> Result<FetchGlobalPayoutTransactionResponse> {
         let path = format!("/v1/global-payout/transactions/{}", transaction_id.into());
+        let response = self.client.get(&path, None)?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Calculates a currency conversion and locks an exchange rate.
+    ///
+    /// Call this before [`Self::authorize_transfer`] or
+    /// [`Self::authorize_exchange`] and pass the returned `exchangeRateId`
+    /// as `locked_exchange_rate_id`.
+    ///
+    /// # Arguments
+    /// * `amount` - Amount to convert
+    /// * `currency` - ISO 4217 source currency code (e.g., "USD")
+    /// * `destination_currency` - ISO 4217 destination currency code (e.g., "EUR")
+    /// * `transaction_type` - Transaction type (e.g., "EXCHANGE", "TRANSFER")
+    pub fn convert_money(
+        &self,
+        amount: f64,
+        currency: impl Into<String>,
+        destination_currency: impl Into<String>,
+        transaction_type: impl Into<String>,
+    ) -> Result<ConvertMoneyResponse> {
+        let body = json!({
+            "amount": amount,
+            "currency": currency.into(),
+            "destinationCurrency": destination_currency.into(),
+            "transactionType": transaction_type.into(),
+        });
+        let response = self
+            .client
+            .post("/v1/global-payout/money/convert", &body, None)?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Retrieves the latest exchange rates for a currency pair.
+    ///
+    /// # Arguments
+    /// * `from` - ISO 4217 currency code to convert from (e.g., "EUR")
+    /// * `to` - ISO 4217 currency code to convert to (e.g., "USD")
+    /// * `region` - Optional trade region filter
+    pub fn fetch_exchange_rates(
+        &self,
+        from: impl Into<String>,
+        to: impl Into<String>,
+        region: Option<String>,
+    ) -> Result<FetchExchangeRatesResponse> {
+        let mut params = vec![("from", from.into()), ("to", to.into())];
+        if let Some(region) = region {
+            params.push(("region", region));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/exchange-rates", Some(params))?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Returns supported payment methods and their requirements.
+    ///
+    /// Supply `destination_country_iso_code` to receive that corridor's
+    /// method-specific `requiredFields`/`optionalFields`; omit it for the
+    /// catalogue of methods and corridors. Use `code`/`name` to filter to a
+    /// specific method.
+    pub fn fetch_payment_methods(
+        &self,
+        code: Option<String>,
+        name: Option<String>,
+        destination_country_iso_code: Option<String>,
+        destination_currency: Option<String>,
+    ) -> Result<FetchPaymentMethodsResponse> {
+        let mut params = Vec::new();
+        if let Some(code) = code {
+            params.push(("code", code));
+        }
+        if let Some(name) = name {
+            params.push(("name", name));
+        }
+        if let Some(v) = destination_country_iso_code {
+            params.push(("destinationCountryIsoCode", v));
+        }
+        if let Some(v) = destination_currency {
+            params.push(("destinationCurrency", v));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/payment-methods", Some(params))?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Returns available bank, institution, or mobile money providers.
+    ///
+    /// Use `is_mobile_money = false` for bank/institution providers and
+    /// `true` for mobile money providers. Use the returned `code` as
+    /// `institutionCode` and `displayName` as `institutionName` in
+    /// [`Self::authorize_transfer`].
+    pub fn list_institution_providers(
+        &self,
+        is_mobile_money: Option<bool>,
+        country_iso_code: Option<String>,
+    ) -> Result<ListInstitutionProvidersResponse> {
+        let mut params = Vec::new();
+        if let Some(v) = is_mobile_money {
+            params.push(("isMobileMoney", v.to_string()));
+        }
+        if let Some(v) = country_iso_code {
+            params.push(("countryIsoCode", v));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/bank/providers", Some(params))?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Sandbox version of [`Self::fetch_accounts`].
+    ///
+    /// Returns canned multi-currency account data for testing.
+    pub fn fetch_accounts_sandbox(&self) -> Result<FetchGlobalPayoutAccountsResponse> {
+        let response = self
+            .client
+            .get("/v1/sandbox/global-payout/accounts", None)?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Sandbox version of [`Self::fetch_account`].
+    ///
+    /// Returns canned account details for the given account ID.
+    pub fn fetch_account_sandbox(
+        &self,
+        account_id: impl Into<String>,
+    ) -> Result<FetchGlobalPayoutAccountResponse> {
+        let path = format!("/v1/sandbox/global-payout/accounts/{}", account_id.into());
         let response = self.client.get(&path, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -375,7 +509,10 @@ impl AsyncGlobalPayout {
         if let Some(v) = beneficiary {
             body["beneficiary"] = json!(v);
         }
-        let response = self.client.post("/v1/global-payout/transfer/authorize", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/global-payout/transfer/authorize", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -409,7 +546,10 @@ impl AsyncGlobalPayout {
         if let Some(v) = locked_exchange_rate_id {
             body["lockedExchangeRateId"] = json!(v);
         }
-        let response = self.client.post("/v1/global-payout/exchange/authorize", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/global-payout/exchange/authorize", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -419,6 +559,120 @@ impl AsyncGlobalPayout {
         transaction_id: impl Into<String>,
     ) -> Result<FetchGlobalPayoutTransactionResponse> {
         let path = format!("/v1/global-payout/transactions/{}", transaction_id.into());
+        let response = self.client.get(&path, None).await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Calculates a currency conversion and locks an exchange rate.
+    ///
+    /// See [`GlobalPayout::convert_money`] for details.
+    pub async fn convert_money(
+        &self,
+        amount: f64,
+        currency: impl Into<String>,
+        destination_currency: impl Into<String>,
+        transaction_type: impl Into<String>,
+    ) -> Result<ConvertMoneyResponse> {
+        let body = json!({
+            "amount": amount,
+            "currency": currency.into(),
+            "destinationCurrency": destination_currency.into(),
+            "transactionType": transaction_type.into(),
+        });
+        let response = self
+            .client
+            .post("/v1/global-payout/money/convert", &body, None)
+            .await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Retrieves the latest exchange rates for a currency pair.
+    ///
+    /// See [`GlobalPayout::fetch_exchange_rates`] for details.
+    pub async fn fetch_exchange_rates(
+        &self,
+        from: impl Into<String>,
+        to: impl Into<String>,
+        region: Option<String>,
+    ) -> Result<FetchExchangeRatesResponse> {
+        let mut params = vec![("from", from.into()), ("to", to.into())];
+        if let Some(region) = region {
+            params.push(("region", region));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/exchange-rates", Some(params))
+            .await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Returns supported payment methods and their requirements.
+    ///
+    /// See [`GlobalPayout::fetch_payment_methods`] for details.
+    pub async fn fetch_payment_methods(
+        &self,
+        code: Option<String>,
+        name: Option<String>,
+        destination_country_iso_code: Option<String>,
+        destination_currency: Option<String>,
+    ) -> Result<FetchPaymentMethodsResponse> {
+        let mut params = Vec::new();
+        if let Some(code) = code {
+            params.push(("code", code));
+        }
+        if let Some(name) = name {
+            params.push(("name", name));
+        }
+        if let Some(v) = destination_country_iso_code {
+            params.push(("destinationCountryIsoCode", v));
+        }
+        if let Some(v) = destination_currency {
+            params.push(("destinationCurrency", v));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/payment-methods", Some(params))
+            .await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Returns available bank, institution, or mobile money providers.
+    ///
+    /// See [`GlobalPayout::list_institution_providers`] for details.
+    pub async fn list_institution_providers(
+        &self,
+        is_mobile_money: Option<bool>,
+        country_iso_code: Option<String>,
+    ) -> Result<ListInstitutionProvidersResponse> {
+        let mut params = Vec::new();
+        if let Some(v) = is_mobile_money {
+            params.push(("isMobileMoney", v.to_string()));
+        }
+        if let Some(v) = country_iso_code {
+            params.push(("countryIsoCode", v));
+        }
+        let response = self
+            .client
+            .get("/v1/global-payout/bank/providers", Some(params))
+            .await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Sandbox version of [`GlobalPayout::fetch_accounts`].
+    pub async fn fetch_accounts_sandbox(&self) -> Result<FetchGlobalPayoutAccountsResponse> {
+        let response = self
+            .client
+            .get("/v1/sandbox/global-payout/accounts", None)
+            .await?;
+        Ok(serde_json::from_value(response)?)
+    }
+
+    /// Sandbox version of [`GlobalPayout::fetch_account`].
+    pub async fn fetch_account_sandbox(
+        &self,
+        account_id: impl Into<String>,
+    ) -> Result<FetchGlobalPayoutAccountResponse> {
+        let path = format!("/v1/sandbox/global-payout/accounts/{}", account_id.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }

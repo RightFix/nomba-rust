@@ -1,6 +1,5 @@
 use crate::error::Result;
 use futures::future::BoxFuture;
-use std::pin::Pin;
 use tokio::sync::Semaphore;
 
 pub async fn gather_limited<F, Fut, T>(
@@ -38,7 +37,12 @@ where
                     return Err(e);
                 }
             }
-            Err(e) => return Err(crate::error::NombaError::api(format!("Task panicked: {}", e))),
+            Err(e) => {
+                return Err(crate::error::NombaError::api(format!(
+                    "Task panicked: {}",
+                    e
+                )))
+            }
         }
     }
 

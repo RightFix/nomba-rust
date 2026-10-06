@@ -1,5 +1,5 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -19,7 +19,11 @@ impl Betting {
         Ok(serde_json::from_value(response)?)
     }
 
-    pub fn customer_lookup(&self, provider: impl Into<String>, customer_id: impl Into<String>) -> Result<BettingCustomerLookupResponse> {
+    pub fn customer_lookup(
+        &self,
+        provider: impl Into<String>,
+        customer_id: impl Into<String>,
+    ) -> Result<BettingCustomerLookupResponse> {
         let mut params = Vec::new();
         params.push(("provider", provider.into()));
         params.push(("customerId", customer_id.into()));
@@ -44,7 +48,7 @@ impl Betting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/bill/betting", &body, None)?;
+        let response = self.client.post("/v2/bill/betting", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -66,7 +70,7 @@ impl Betting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/bill/betting/{}", account_id.into());
+        let path = format!("/v2/bill/betting/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -87,11 +91,18 @@ impl AsyncBetting {
         Ok(serde_json::from_value(response)?)
     }
 
-    pub async fn customer_lookup(&self, provider: impl Into<String>, customer_id: impl Into<String>) -> Result<BettingCustomerLookupResponse> {
+    pub async fn customer_lookup(
+        &self,
+        provider: impl Into<String>,
+        customer_id: impl Into<String>,
+    ) -> Result<BettingCustomerLookupResponse> {
         let mut params = Vec::new();
         params.push(("provider", provider.into()));
         params.push(("customerId", customer_id.into()));
-        let response = self.client.get("/v1/bill/betting/lookup", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/bill/betting/lookup", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -112,7 +123,7 @@ impl AsyncBetting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/bill/betting", &body, None).await?;
+        let response = self.client.post("/v2/bill/betting", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -134,7 +145,7 @@ impl AsyncBetting {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/bill/betting/{}", account_id.into());
+        let path = format!("/v2/bill/betting/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }

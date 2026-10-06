@@ -2,8 +2,8 @@
 //!
 //! Provides methods for airtime purchase and data bundle vending.
 
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -48,7 +48,7 @@ impl AirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let response = self.client.post("/v1/bill/topup", &body, None)?;
+        let response = self.client.post("/v2/bill/topup", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -82,7 +82,7 @@ impl AirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let path = format!("/v1/bill/topup/{}", account_id.into());
+        let path = format!("/v2/bill/topup/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -104,7 +104,7 @@ impl AirtimeData {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let plans = nomba.airtime_data.fetch_data_plans("MTN".to_string())?;
@@ -112,7 +112,7 @@ impl AirtimeData {
     ///     "mtn47".to_string(), "08055441122".to_string(), "MTN".to_string(), "txn-ref-123".to_string(), Some("John Doe".to_string()),
     /// )?;
     /// println!("Data vended: {}", vend.data.amount);
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     pub fn vend_data_parent(
         &self,
@@ -131,7 +131,7 @@ impl AirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let response = self.client.post("/v1/bill/data", &body, None)?;
+        let response = self.client.post("/v2/bill/data", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -168,7 +168,7 @@ impl AirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let path = format!("/v1/bill/data/{}", account_id.into());
+        let path = format!("/v2/bill/data/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -220,7 +220,7 @@ impl AsyncAirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let response = self.client.post("/v1/bill/topup", &body, None).await?;
+        let response = self.client.post("/v2/bill/topup", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -243,7 +243,7 @@ impl AsyncAirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let path = format!("/v1/bill/topup/{}", account_id.into());
+        let path = format!("/v2/bill/topup/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -268,7 +268,7 @@ impl AsyncAirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let response = self.client.post("/v1/bill/data", &body, None).await?;
+        let response = self.client.post("/v2/bill/data", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -293,7 +293,7 @@ impl AsyncAirtimeData {
         if let Some(sender_name) = sender_name {
             body["senderName"] = json!(sender_name);
         }
-        let path = format!("/v1/bill/data/{}", account_id.into());
+        let path = format!("/v2/bill/data/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -301,7 +301,10 @@ impl AsyncAirtimeData {
     /// Fetches available data plans for a network.
     ///
     /// See [`AirtimeData::fetch_data_plans`] for full parameter documentation.
-    pub async fn fetch_data_plans(&self, network: impl Into<String>) -> Result<FetchDataPlansResponse> {
+    pub async fn fetch_data_plans(
+        &self,
+        network: impl Into<String>,
+    ) -> Result<FetchDataPlansResponse> {
         let path = format!("/v1/bill/data-plan/{}", network.into());
         let response = self.client.get(&path, None).await?;
         Ok(serde_json::from_value(response)?)

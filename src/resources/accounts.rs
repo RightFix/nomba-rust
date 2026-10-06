@@ -1,5 +1,5 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -51,7 +51,9 @@ impl Accounts {
     ) -> Result<FetchAccountDetailsResponse> {
         let mut params = Vec::new();
         params.push(("accountId", account_id.into()));
-        let response = self.client.get("/v1/accounts/sub-account-details", Some(params))?;
+        let response = self
+            .client
+            .get("/v1/accounts/sub-account-details", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -137,7 +139,9 @@ impl AsyncAccounts {
         Self { client }
     }
 
-    pub async fn list_all_accounts(&self) -> Result<NombaResponse<PaginatedResponse<SubAccountData>>> {
+    pub async fn list_all_accounts(
+        &self,
+    ) -> Result<NombaResponse<PaginatedResponse<SubAccountData>>> {
         let response = self.client.get("/v1/accounts", None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -174,7 +178,10 @@ impl AsyncAccounts {
     ) -> Result<FetchAccountDetailsResponse> {
         let mut params = Vec::new();
         params.push(("accountId", account_id.into()));
-        let response = self.client.get("/v1/accounts/sub-account-details", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/accounts/sub-account-details", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -197,7 +204,10 @@ impl AsyncAccounts {
         Ok(serde_json::from_value(response)?)
     }
 
-    pub async fn suspend_account(&self, account_id: impl Into<String>) -> Result<SuspendAccountResponse> {
+    pub async fn suspend_account(
+        &self,
+        account_id: impl Into<String>,
+    ) -> Result<SuspendAccountResponse> {
         let path = format!("/v1/accounts/suspend/{}", account_id.into());
         let response = self.client.put(&path, &json!({}), None).await?;
         Ok(serde_json::from_value(response)?)

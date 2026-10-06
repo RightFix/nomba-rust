@@ -2,8 +2,8 @@
 //!
 //! Provides methods for cable TV subscription and plan lookup.
 
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -30,7 +30,11 @@ impl CableTv {
     ///
     /// # Returns
     /// A [`CableTvLookupResponse`] with customer details.
-    pub fn lookup(&self, provider: impl Into<String>, smart_card_number: impl Into<String>) -> Result<CableTvLookupResponse> {
+    pub fn lookup(
+        &self,
+        provider: impl Into<String>,
+        smart_card_number: impl Into<String>,
+    ) -> Result<CableTvLookupResponse> {
         let mut params = Vec::new();
         params.push(("provider", provider.into()));
         params.push(("smartCardNumber", smart_card_number.into()));
@@ -69,7 +73,7 @@ impl CableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/bill/cabletv", &body, None)?;
+        let response = self.client.post("/v2/bill/cabletv", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -106,7 +110,7 @@ impl CableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/bill/cabletv/{}", account_id.into());
+        let path = format!("/v2/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
@@ -123,16 +127,19 @@ impl CableTv {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let plans = nomba.cabletv.fetch_plans("dstv")?;
     /// for plan in plans.data {
     ///     println!("Plan: {} - ₦{}", plan.subscription_type, plan.amount);
     /// }
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
-    pub fn fetch_plans(&self, cable_tv_type: impl Into<String>) -> Result<FetchCableTvPlansResponse> {
+    pub fn fetch_plans(
+        &self,
+        cable_tv_type: impl Into<String>,
+    ) -> Result<FetchCableTvPlansResponse> {
         let mut params = Vec::new();
         params.push(("cableTvType", cable_tv_type.into()));
         let response = self.client.get("/v1/bill/cableTvProduct", Some(params))?;
@@ -153,11 +160,18 @@ impl AsyncCableTv {
     }
 
     /// Looks up a cable TV smart card number.
-    pub async fn lookup(&self, provider: impl Into<String>, smart_card_number: impl Into<String>) -> Result<CableTvLookupResponse> {
+    pub async fn lookup(
+        &self,
+        provider: impl Into<String>,
+        smart_card_number: impl Into<String>,
+    ) -> Result<CableTvLookupResponse> {
         let mut params = Vec::new();
         params.push(("provider", provider.into()));
         params.push(("smartCardNumber", smart_card_number.into()));
-        let response = self.client.get("/v1/bill/cabletv/lookup", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/bill/cabletv/lookup", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -181,7 +195,7 @@ impl AsyncCableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let response = self.client.post("/v1/bill/cabletv", &body, None).await?;
+        let response = self.client.post("/v2/bill/cabletv", &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -206,7 +220,7 @@ impl AsyncCableTv {
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
         }
-        let path = format!("/v1/bill/cabletv/{}", account_id.into());
+        let path = format!("/v2/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;
         Ok(serde_json::from_value(response)?)
     }
@@ -214,10 +228,16 @@ impl AsyncCableTv {
     /// Fetches available cable TV plans for a provider.
     ///
     /// See [`CableTv::fetch_plans`] for full parameter documentation.
-    pub async fn fetch_plans(&self, cable_tv_type: impl Into<String>) -> Result<FetchCableTvPlansResponse> {
+    pub async fn fetch_plans(
+        &self,
+        cable_tv_type: impl Into<String>,
+    ) -> Result<FetchCableTvPlansResponse> {
         let mut params = Vec::new();
         params.push(("cableTvType", cable_tv_type.into()));
-        let response = self.client.get("/v1/bill/cableTvProduct", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/bill/cableTvProduct", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 }

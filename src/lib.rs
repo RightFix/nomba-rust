@@ -1,3 +1,20 @@
+//! `nomba-rs` — unofficial Rust SDK for the [Nomba payments API](https://developer.nomba.com).
+//!
+//! Full guides and per-endpoint reference live at
+//! <https://RightFix.github.io/nomba-docs-rust/>.
+//!
+//! ```no_run
+//! use nomba_rs::Nomba;
+//!
+//! let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
+//! let account = nomba.virtual_accounts.create_virtual_account(
+//!     "ref-123",
+//!     "Jane Doe",
+//!     None, None, None
+//! )?;
+//! # Ok::<(), nomba_rs::NombaError>(())
+//! ```
+
 #[cfg(feature = "validation")]
 mod validation;
 

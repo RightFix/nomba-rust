@@ -1,6 +1,5 @@
 use crate::error::{NombaError, Result};
 use openapiv3::{OpenAPI, PathItem, ReferenceOr, RequestBody, Schema, SchemaKind, Type};
-use std::collections::HashMap;
 use std::sync::OnceLock;
 
 static SPEC: OnceLock<OpenAPI> = OnceLock::new();

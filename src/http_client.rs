@@ -1,9 +1,7 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use chrono::Utc;
-use reqwest::{header, Client, RequestBuilder};
-use tokio::sync::Mutex as AsyncMutex;
+use reqwest::{header, Client};
 
 use crate::error::{ApiErrorResponse, NombaError, Result};
 
@@ -26,8 +24,7 @@ impl TokenCache {
     }
 
     fn is_valid(&self) -> bool {
-        self.access_token.is_some()
-            && self.expires_at.map_or(false, |exp| Instant::now() < exp)
+        self.access_token.is_some() && self.expires_at.map_or(false, |exp| Instant::now() < exp)
     }
 
     fn invalidate(&mut self) {
@@ -96,16 +93,14 @@ impl NombaClient {
             LIVE_BASE_URL
         };
 
-        let mut builder = Client::builder()
-            .timeout(config.timeout)
-            .default_headers({
-                let mut headers = header::HeaderMap::new();
-                headers.insert(
-                    header::CONTENT_TYPE,
-                    header::HeaderValue::from_static("application/json"),
-                );
-                headers
-            });
+        let mut builder = Client::builder().timeout(config.timeout).default_headers({
+            let mut headers = header::HeaderMap::new();
+            headers.insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_static("application/json"),
+            );
+            headers
+        });
 
         if config.sandbox {
             builder = builder.danger_accept_invalid_certs(true);
@@ -150,13 +145,12 @@ impl NombaClient {
         let body: serde_json::Value = response.json().await?;
 
         if !status.is_success() {
-            let error: ApiErrorResponse = serde_json::from_value(body.clone()).unwrap_or_else(|_| {
-                ApiErrorResponse {
+            let error: ApiErrorResponse =
+                serde_json::from_value(body.clone()).unwrap_or_else(|_| ApiErrorResponse {
                     code: "UNKNOWN".to_string(),
                     description: "Failed to parse error response".to_string(),
                     data: None,
-                }
-            });
+                });
             return Err(NombaError::auth_with_details(
                 format!("Failed to obtain access token: {}", error),
                 status.as_u16(),
@@ -168,7 +162,9 @@ impl NombaClient {
         let token = data
             .get("access_token")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| NombaError::auth("Nomba auth response did not include an access_token"))?;
+            .ok_or_else(|| {
+                NombaError::auth("Nomba auth response did not include an access_token")
+            })?;
 
         let expires_in = data
             .get("expires_in")
@@ -177,7 +173,8 @@ impl NombaClient {
 
         let mut cache = self.token_cache.lock().await;
         cache.access_token = Some(token.to_string());
-        cache.expires_at = Some(Instant::now() + Duration::from_secs(expires_in.saturating_sub(50)));
+        cache.expires_at =
+            Some(Instant::now() + Duration::from_secs(expires_in.saturating_sub(50)));
 
         Ok(token.to_string())
     }
@@ -190,17 +187,15 @@ impl NombaClient {
             }
         }
 
-        let mut cache = self.token_cache.lock().await;
-        if !cache.is_valid() {
-            let token = self.fetch_token().await?;
-            cache.access_token = Some(token.clone());
-            return Ok(token);
-        }
-        Ok(cache.access_token.as_ref().unwrap().clone())
+        // Fetch without holding the lock: fetch_token() locks the cache
+        // itself to store the new token. Holding the guard across this
+        // await would deadlock (tokio Mutex is not reentrant).
+        let token = self.fetch_token().await?;
+        Ok(token)
     }
 
-    fn invalidate_token(&self) {
-        let mut cache = self.token_cache.blocking_lock();
+    async fn invalidate_token(&self) {
+        let mut cache = self.token_cache.lock().await;
         cache.invalidate();
     }
 
@@ -253,7 +248,7 @@ impl NombaClient {
         let status = response.status();
 
         if status.as_u16() == 401 && retry_on_auth_failure {
-            self.invalidate_token();
+            self.invalidate_token().await;
             return Box::pin(self.request_with_retry(
                 method,
                 path,
@@ -288,13 +283,12 @@ impl NombaClient {
         let body: serde_json::Value = response.json().await?;
 
         if !status.is_success() {
-            let error: ApiErrorResponse = serde_json::from_value(body.clone()).unwrap_or_else(|_| {
-                ApiErrorResponse {
+            let error: ApiErrorResponse =
+                serde_json::from_value(body.clone()).unwrap_or_else(|_| ApiErrorResponse {
                     code: "UNKNOWN".to_string(),
                     description: "Failed to parse error response".to_string(),
                     data: None,
-                }
-            });
+                });
             return Err(NombaError::api_with_details(
                 error.description,
                 status.as_u16(),
@@ -306,17 +300,13 @@ impl NombaClient {
         Ok(body)
     }
 
-    pub async fn get(&self, path: &str, query: Option<Vec<(&str, String)>>) -> Result<serde_json::Value> {
-        self.request_with_retry(
-            reqwest::Method::GET,
-            path,
-            None,
-            query,
-            None,
-            0,
-            true,
-        )
-        .await
+    pub async fn get(
+        &self,
+        path: &str,
+        query: Option<Vec<(&str, String)>>,
+    ) -> Result<serde_json::Value> {
+        self.request_with_retry(reqwest::Method::GET, path, None, query, None, 0, true)
+            .await
     }
 
     pub async fn post(
@@ -343,16 +333,8 @@ impl NombaClient {
         json: &serde_json::Value,
         query: Option<Vec<(&str, String)>>,
     ) -> Result<serde_json::Value> {
-        self.request_with_retry(
-            reqwest::Method::PUT,
-            path,
-            Some(json),
-            query,
-            None,
-            0,
-            true,
-        )
-        .await
+        self.request_with_retry(reqwest::Method::PUT, path, Some(json), query, None, 0, true)
+            .await
     }
 
     pub async fn delete(
@@ -360,16 +342,8 @@ impl NombaClient {
         path: &str,
         query: Option<Vec<(&str, String)>>,
     ) -> Result<serde_json::Value> {
-        self.request_with_retry(
-            reqwest::Method::DELETE,
-            path,
-            None,
-            query,
-            None,
-            0,
-            true,
-        )
-        .await
+        self.request_with_retry(reqwest::Method::DELETE, path, None, query, None, 0, true)
+            .await
     }
 }
 
@@ -387,7 +361,10 @@ impl BlockingNombaClient {
             .enable_all()
             .build()?;
         let inner = NombaClient::new(config)?;
-        Ok(Self { inner, runtime: std::sync::Arc::new(runtime) })
+        Ok(Self {
+            inner,
+            runtime: std::sync::Arc::new(runtime),
+        })
     }
 
     pub fn get(&self, path: &str, query: Option<Vec<(&str, String)>>) -> Result<serde_json::Value> {
@@ -412,7 +389,11 @@ impl BlockingNombaClient {
         self.runtime.block_on(self.inner.put(path, json, query))
     }
 
-    pub fn delete(&self, path: &str, query: Option<Vec<(&str, String)>>) -> Result<serde_json::Value> {
+    pub fn delete(
+        &self,
+        path: &str,
+        query: Option<Vec<(&str, String)>>,
+    ) -> Result<serde_json::Value> {
         self.runtime.block_on(self.inner.delete(path, query))
     }
 }

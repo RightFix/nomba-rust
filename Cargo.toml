@@ -1,11 +1,14 @@
 [package]
-name = "nomba"
-version = "1.0.0"
+name = "nomba-rs"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
-license = "AGPL-3.0"
+authors = ["Righteousness Ude"]
+license = "AGPL-3.0-only"
 description = "Unofficial Rust SDK for the Nomba payments API"
-repository = "https://github.com/RightFix/nomba"
+repository = "https://github.com/RightFix/nomba-rust"
+homepage = "https://RightFix.github.io/nomba-docs-rust/"
+documentation = "https://RightFix.github.io/nomba-docs-rust/"
 readme = "README.md"
 keywords = ["nomba", "payments", "nigeria", "fintech", "sdk"]
 categories = ["api-bindings", "web-programming", "finance"]
@@ -13,7 +16,7 @@ categories = ["api-bindings", "web-programming", "finance"]
 [features]
 default = ["blocking", "async"]
 blocking = ["reqwest/blocking"]
-async = ["reqwest", "tokio/full"]
+async = ["reqwest"]
 validation = ["openapiv3"]
 
 [dependencies]

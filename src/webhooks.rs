@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
 use serde_json::Value;
 use sha2::Sha256;
-use std::time::Duration;
 
 type HmacSha256 = Hmac<Sha256>;
 

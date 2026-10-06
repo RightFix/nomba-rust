@@ -1,5 +1,5 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -35,7 +35,9 @@ impl Charge {
         if let Some(description) = description {
             body["description"] = json!(description);
         }
-        let response = self.client.post("/v1/checkout/tokenized-card-payment", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/tokenized-card-payment", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -51,7 +53,9 @@ impl Charge {
         if let Some(limit) = limit {
             params.push(("limit", limit.to_string()));
         }
-        let response = self.client.get("/v1/checkout/tokenized-card-data", Some(params))?;
+        let response = self
+            .client
+            .get("/v1/checkout/tokenized-card-data", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -66,7 +70,9 @@ impl Charge {
             "currentEmailAddress": current_email_address.into(),
             "newEmailAddress": new_email_address.into(),
         });
-        let response = self.client.post("/v1/checkout/tokenized-card-data", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/tokenized-card-data", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -75,25 +81,9 @@ impl Charge {
         token_key: impl Into<String>,
     ) -> Result<DeleteTokenizedCardResponse> {
         let params = vec![("tokenKey", token_key.into())];
-        let response = self.client.delete("/v1/checkout/tokenized-card-data", Some(params))?;
-        Ok(serde_json::from_value(response)?)
-    }
-
-    pub fn fetch_bank_codes(&self) -> Result<FetchBankCodesResponse> {
-        let response = self.client.get("/v1/transfers/banks", None)?;
-        Ok(serde_json::from_value(response)?)
-    }
-
-    pub fn bank_account_lookup(
-        &self,
-        account_number: impl Into<String>,
-        bank_code: impl Into<String>,
-    ) -> Result<BankAccountLookupResponse> {
-        let body = json!({
-            "accountNumber": account_number.into(),
-            "bankCode": bank_code.into(),
-        });
-        let response = self.client.post("/v1/transfers/bank/lookup", &body, None)?;
+        let response = self
+            .client
+            .delete("/v1/checkout/tokenized-card-data", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -116,7 +106,9 @@ impl Charge {
         if let Some(device_information) = device_information {
             body["deviceInformation"] = device_information;
         }
-        let response = self.client.post("/v1/checkout/checkout-card-detail", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/checkout-card-detail", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -131,7 +123,9 @@ impl Charge {
             "otp": otp.into(),
             "transactionId": transaction_id.into(),
         });
-        let response = self.client.post("/v1/checkout/checkout-card-otp", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/checkout-card-otp", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -149,7 +143,9 @@ impl Charge {
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionDetailsResponse> {
         let body = json!({ "orderReference": order_reference.into() });
-        let response = self.client.post("/v1/checkout/confirm-transaction-receipt", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/confirm-transaction-receipt", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -162,7 +158,9 @@ impl Charge {
             "transactionId": transaction_id.into(),
             "forceCancel": force.unwrap_or(false),
         });
-        let response = self.client.post("/v1/checkout/transaction/cancel", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/checkout/transaction/cancel", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 }
@@ -198,7 +196,10 @@ impl AsyncCharge {
         if let Some(description) = description {
             body["description"] = json!(description);
         }
-        let response = self.client.post("/v1/checkout/tokenized-card-payment", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/tokenized-card-payment", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -214,7 +215,10 @@ impl AsyncCharge {
         if let Some(limit) = limit {
             params.push(("limit", limit.to_string()));
         }
-        let response = self.client.get("/v1/checkout/tokenized-card-data", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/checkout/tokenized-card-data", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -229,7 +233,10 @@ impl AsyncCharge {
             "currentEmailAddress": current_email_address.into(),
             "newEmailAddress": new_email_address.into(),
         });
-        let response = self.client.post("/v1/checkout/tokenized-card-data", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/tokenized-card-data", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -238,25 +245,10 @@ impl AsyncCharge {
         token_key: impl Into<String>,
     ) -> Result<DeleteTokenizedCardResponse> {
         let params = vec![("tokenKey", token_key.into())];
-        let response = self.client.delete("/v1/checkout/tokenized-card-data", Some(params)).await?;
-        Ok(serde_json::from_value(response)?)
-    }
-
-    pub async fn fetch_bank_codes(&self) -> Result<FetchBankCodesResponse> {
-        let response = self.client.get("/v1/transfers/banks", None).await?;
-        Ok(serde_json::from_value(response)?)
-    }
-
-    pub async fn bank_account_lookup(
-        &self,
-        account_number: impl Into<String>,
-        bank_code: impl Into<String>,
-    ) -> Result<BankAccountLookupResponse> {
-        let body = json!({
-            "accountNumber": account_number.into(),
-            "bankCode": bank_code.into(),
-        });
-        let response = self.client.post("/v1/transfers/bank/lookup", &body, None).await?;
+        let response = self
+            .client
+            .delete("/v1/checkout/tokenized-card-data", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -279,7 +271,10 @@ impl AsyncCharge {
         if let Some(device_information) = device_information {
             body["deviceInformation"] = device_information;
         }
-        let response = self.client.post("/v1/checkout/checkout-card-detail", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/checkout-card-detail", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -294,7 +289,10 @@ impl AsyncCharge {
             "otp": otp.into(),
             "transactionId": transaction_id.into(),
         });
-        let response = self.client.post("/v1/checkout/checkout-card-otp", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/checkout-card-otp", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -303,7 +301,10 @@ impl AsyncCharge {
         order_reference: impl Into<String>,
     ) -> Result<ResendOtpResponse> {
         let body = json!({ "orderReference": order_reference.into() });
-        let response = self.client.post("/v1/checkout/resend-otp", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/resend-otp", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -312,7 +313,10 @@ impl AsyncCharge {
         order_reference: impl Into<String>,
     ) -> Result<FetchCheckoutTransactionDetailsResponse> {
         let body = json!({ "orderReference": order_reference.into() });
-        let response = self.client.post("/v1/checkout/confirm-transaction-receipt", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/confirm-transaction-receipt", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -325,7 +329,10 @@ impl AsyncCharge {
             "transactionId": transaction_id.into(),
             "forceCancel": force.unwrap_or(false),
         });
-        let response = self.client.post("/v1/checkout/transaction/cancel", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/checkout/transaction/cancel", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 }

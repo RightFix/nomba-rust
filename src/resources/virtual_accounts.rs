@@ -1,5 +1,5 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -117,7 +117,9 @@ impl VirtualAccounts {
             body["resourceAcquired"] = json!(resource_acquired);
         }
 
-        let response = self.client.post("/v1/accounts/virtual/list", &body, Some(params))?;
+        let response = self
+            .client
+            .post("/v1/accounts/virtual/list", &body, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -200,7 +202,10 @@ impl AsyncVirtualAccounts {
             body["expectedAmount"] = json!(expected_amount);
         }
 
-        let response = self.client.post("/v1/accounts/virtual", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/accounts/virtual", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 

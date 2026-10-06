@@ -1,7 +1,6 @@
 // Generated models for Nomba API responses
 // These mirror the Python models.py structure
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -903,6 +902,60 @@ pub struct FetchGlobalPayoutAccountResponse {
     pub data: GlobalPayoutAccountData,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PaymentMethodCorridor {
+    #[serde(rename = "countryIsoCode", default)]
+    pub country_iso_code: Option<String>,
+    #[serde(default)]
+    pub currency: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PaymentMethodData {
+    #[serde(default)]
+    pub code: Option<String>,
+    #[serde(rename = "displayName", default)]
+    pub display_name: Option<String>,
+    #[serde(rename = "purposeOfPaymentRequired", default)]
+    pub purpose_of_payment_required: Option<bool>,
+    #[serde(rename = "requiredFields", default)]
+    pub required_fields: Vec<String>,
+    #[serde(rename = "optionalFields", default)]
+    pub optional_fields: Vec<String>,
+    #[serde(rename = "accountTypes", default)]
+    pub account_types: Vec<String>,
+    #[serde(rename = "bankAccountTypes", default)]
+    pub bank_account_types: Vec<String>,
+    #[serde(rename = "supportedCorridors", default)]
+    pub supported_corridors: Vec<PaymentMethodCorridor>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FetchPaymentMethodsResponse {
+    pub code: String,
+    pub description: String,
+    pub data: Vec<PaymentMethodData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct InstitutionProviderData {
+    #[serde(default)]
+    pub code: Option<String>,
+    #[serde(rename = "displayName", default)]
+    pub display_name: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ListInstitutionProvidersResponse {
+    pub code: String,
+    pub description: String,
+    pub data: Vec<InstitutionProviderData>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizeTransferMeta {
     #[serde(rename = "source_amount")]
@@ -992,6 +1045,25 @@ pub struct AuthorizeExchangeResponse {
 pub struct RevokeTokenResponse {
     pub code: String,
     pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefreshTokenData {
+    #[serde(rename = "businessId")]
+    pub business_id: String,
+    #[serde(rename = "access_token")]
+    pub access_token: String,
+    #[serde(rename = "refresh_token")]
+    pub refresh_token: String,
+    #[serde(rename = "expiresAt")]
+    pub expires_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefreshTokenResponse {
+    pub code: String,
+    pub description: String,
+    pub data: RefreshTokenData,
 }
 
 /// CableTV models

@@ -1,8 +1,9 @@
-# Nomba Rust SDK
+# nomba-rs
 
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
 Unofficial Rust SDK for the [Nomba](https://developer.nomba.com) payments API.
+Full documentation (guides + API reference): <https://RightFix.github.io/nomba-docs-rust/>
 
 ## Features
 
@@ -22,13 +23,13 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nomba = { git = "https://github.com/RightFix/nomba", branch = "main" }
+nomba-rs = "0.1"
 ```
 
 Or for local development:
 ```toml
 [dependencies]
-nomba = { path = "../nomba-rust" }
+nomba-rs = { path = "../nomba-rust" }
 ```
 
 ### Features
@@ -38,7 +39,7 @@ nomba = { path = "../nomba-rust" }
 - `validation` - Enable local request validation against OpenAPI spec
 
 ```toml
-nomba = { version = "0.1", features = ["async", "validation"] }
+nomba-rs = { version = "0.1", features = ["async", "validation"] }
 ```
 
 ## Quick Start
@@ -46,9 +47,9 @@ nomba = { version = "0.1", features = ["async", "validation"] }
 ### Sync Client
 
 ```rust
-use nomba::{Nomba, NombaClientConfig};
+use nomba_rs::{Nomba, NombaClientConfig};
 
-fn main() -> nomba::Result<()> {
+fn main() -> nomba_rs::Result<()> {
     let nomba = Nomba::new(
         "your_client_id",
         "your_client_secret",
@@ -70,10 +71,10 @@ fn main() -> nomba::Result<()> {
 ### Async Client
 
 ```rust
-use nomba::AsyncNomba;
+use nomba_rs::AsyncNomba;
 
 #[tokio::main]
-async fn main() -> nomba::Result<()> {
+async fn main() -> nomba_rs::Result<()> {
     let nomba = AsyncNomba::new(
         "your_client_id",
         "your_client_secret",
@@ -105,7 +106,7 @@ let nomba = Nomba::new_sandbox(
 ### Configuration
 
 ```rust
-use nomba::NombaClientConfig;
+use nomba_rs::NombaClientConfig;
 use std::time::Duration;
 
 let config = NombaClientConfig::new(
@@ -146,7 +147,7 @@ Each API group is exposed as a resource on the client:
 ## Auth - Revoke Access Token
 
 ```rust
-use nomba::Nomba;
+use nomba_rs::Nomba;
 
 let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
 
@@ -158,7 +159,7 @@ println!("Token revoked: {}", revoked.description);
 ## Global Payout
 
 ```rust
-use nomba::Nomba;
+use nomba_rs::Nomba;
 
 let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
 
@@ -215,7 +216,7 @@ println!("Exchange: {}", exchange.data.wt_transaction_id);
 ## CableTV - Fetch Plans
 
 ```rust
-use nomba::Nomba;
+use nomba_rs::Nomba;
 
 let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
 
@@ -231,7 +232,7 @@ for plan in plans.data {
 ## Airtime & Data - Data Vending with Product ID
 
 ```rust
-use nomba::Nomba;
+use nomba_rs::Nomba;
 
 let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
 
@@ -254,7 +255,7 @@ println!("Data vended: {}", vend.data.amount);
 The SDK provides a guided flow for card payments:
 
 ```rust
-use nomba::Nomba;
+use nomba_rs::Nomba;
 
 let nomba = Nomba::new(...)?;
 
@@ -301,10 +302,10 @@ if step.completed {
 ## Webhook Verification
 
 ```rust
-use nomba::webhooks::{verify_webhook_request, check_timestamp_freshness};
+use nomba_rs::webhooks::{verify_webhook_request, check_timestamp_freshness};
 use std::collections::HashMap;
 
-fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba::Result<()> {
+fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba_rs::Result<()> {
     let payload = verify_webhook_request(
         "your_webhook_signature_key",
         body,
@@ -321,7 +322,7 @@ fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba::Resul
 ## Pagination
 
 ```rust
-use nomba::pagination::paginate;
+use nomba_rs::pagination::paginate;
 
 // Sync pagination
 for account in paginate(|limit, cursor| {
@@ -331,7 +332,7 @@ for account in paginate(|limit, cursor| {
 }
 
 // Async pagination
-use nomba::pagination::apaginate;
+use nomba_rs::pagination::apaginate;
 use futures::StreamExt;
 
 let mut stream = apaginate(|limit, cursor| {
@@ -346,7 +347,7 @@ while let Some(account) = stream.next().await {
 ## Concurrency Control
 
 ```rust
-use nomba::concurrency::gather_limited;
+use nomba_rs::concurrency::gather_limited;
 
 // Run up to 5 requests concurrently
 let calls: Vec<_> = account_refs.iter().map(|ref| {
@@ -363,7 +364,7 @@ let results = gather_limited(calls, 5, false).await?;
 ## Error Handling
 
 ```rust
-use nomba::{NombaError, Result};
+use nomba_rs::{NombaError, Result};
 
 match nomba.virtual_accounts.create_virtual_account(...) {
     Ok(response) => println!("Success: {:?}", response),
@@ -389,7 +390,7 @@ nomba = { version = "0.1", features = ["validation"] }
 ```
 
 ```rust
-use nomba::validate_body;
+use nomba_rs::validate_body;
 use serde_json::json;
 
 let body = json!({
@@ -403,7 +404,9 @@ validate_body("post", "/v1/accounts/virtual", &body)?;
 
 ## License
 
-AGPL-3.0 License - see [LICENSE](LICENSE) for details.
+AGPL-3.0-only — Copyright (c) 2026 Righteousness Ude. See [LICENSE](LICENSE) for details.
+
+Full guides and API reference: <https://RightFix.github.io/nomba-docs-rust/>
 
 ## Disclaimer
 

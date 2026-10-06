@@ -2,8 +2,8 @@
 //!
 //! Provides methods for creating and managing direct debit mandates.
 
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
@@ -55,7 +55,9 @@ impl DirectDebits {
         if let Some(customer_name) = customer_name {
             params.push(("customerName", customer_name));
         }
-        let response = self.client.get("/v1/direct-debits/mandates", Some(params))?;
+        let response = self
+            .client
+            .get("/v1/direct-debits/mandates", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -72,8 +74,11 @@ impl DirectDebits {
         mandate_id: impl Into<String>,
         mandate_status: impl Into<String>,
     ) -> Result<UpdateMandateStatusResponse> {
-        let body = json!({ "mandateId": mandate_id.into(), "mandateStatus": mandate_status.into() });
-        let response = self.client.put("/v1/direct-debits/update-status", &body, None)?;
+        let body =
+            json!({ "mandateId": mandate_id.into(), "mandateStatus": mandate_status.into() });
+        let response = self
+            .client
+            .put("/v1/direct-debits/update-status", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -97,7 +102,9 @@ impl DirectDebits {
             "amount": amount.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let response = self.client.post("/v1/direct-debits/debit-mandate", &body, None)?;
+        let response = self
+            .client
+            .post("/v1/direct-debits/debit-mandate", &body, None)?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -156,7 +163,7 @@ impl DirectDebits {
     ///
     /// # Example
     /// ```no_run
-    /// use nomba::Nomba;
+    /// use nomba_rs::Nomba;
     ///
     /// let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
     /// let mandate = nomba.direct_debits.create_mandate(
@@ -166,7 +173,7 @@ impl DirectDebits {
     ///     Some("Monthly subscription".to_string()), Some(true),
     /// )?;
     /// println!("Mandate created: {}", mandate.response_message);
-    /// # Ok::<(), nomba::NombaError>(())
+    /// # Ok::<(), nomba_rs::NombaError>(())
     /// ```
     pub fn create_mandate(
         &self,
@@ -247,7 +254,10 @@ impl AsyncDirectDebits {
         if let Some(customer_name) = customer_name {
             params.push(("customerName", customer_name));
         }
-        let response = self.client.get("/v1/direct-debits/mandates", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/direct-debits/mandates", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -257,8 +267,12 @@ impl AsyncDirectDebits {
         mandate_id: impl Into<String>,
         mandate_status: impl Into<String>,
     ) -> Result<UpdateMandateStatusResponse> {
-        let body = json!({ "mandateId": mandate_id.into(), "mandateStatus": mandate_status.into() });
-        let response = self.client.put("/v1/direct-debits/update-status", &body, None).await?;
+        let body =
+            json!({ "mandateId": mandate_id.into(), "mandateStatus": mandate_status.into() });
+        let response = self
+            .client
+            .put("/v1/direct-debits/update-status", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -274,7 +288,10 @@ impl AsyncDirectDebits {
             "amount": amount.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        let response = self.client.post("/v1/direct-debits/debit-mandate", &body, None).await?;
+        let response = self
+            .client
+            .post("/v1/direct-debits/debit-mandate", &body, None)
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 

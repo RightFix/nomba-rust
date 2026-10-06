@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use crate::resources::charge::{AsyncCharge, Charge};
-use serde_json::{json, Value, to_value};
+use serde_json::{to_value, Value};
 
 const RESPONSE_CODE_SUCCESS: &str = "00";
 const RESPONSE_CODE_OTP_REQUIRED: &str = "T0";
@@ -21,16 +21,29 @@ pub struct CardPaymentStep {
 }
 
 fn interpret(raw: Value, transaction_id_fallback: Option<String>) -> Result<CardPaymentStep> {
-    let data = raw.get("data").and_then(|v| v.as_object()).cloned().unwrap_or_default();
-    let response_code = data.get("responseCode").and_then(|v| v.as_str()).map(|s| s.to_string());
-    let transaction_id = data.get("transactionId").and_then(|v| v.as_str()).map(|s| s.to_string())
+    let data = raw
+        .get("data")
+        .and_then(|v| v.as_object())
+        .cloned()
+        .unwrap_or_default();
+    let response_code = data
+        .get("responseCode")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let transaction_id = data
+        .get("transactionId")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
         .or(transaction_id_fallback);
 
     Ok(CardPaymentStep {
         raw: raw.clone(),
         response_code: response_code.clone(),
         status: data.get("status").cloned(),
-        message: data.get("message").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        message: data
+            .get("message")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
         transaction_id,
         requires_otp: response_code.as_deref() == Some(RESPONSE_CODE_OTP_REQUIRED),
         requires_3ds: response_code.as_deref() == Some(RESPONSE_CODE_3DS_REQUIRED),
@@ -75,11 +88,12 @@ impl CardPaymentFlow {
     }
 
     pub fn submit_otp(&mut self, otp: impl Into<String>) -> Result<CardPaymentStep> {
-        let transaction_id = self.transaction_id.as_ref()
-            .ok_or_else(|| crate::error::NombaError::validation(
+        let transaction_id = self.transaction_id.as_ref().ok_or_else(|| {
+            crate::error::NombaError::validation(
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
-            ))?;
+            )
+        })?;
 
         let raw = self.charge.submit_customer_payment_otp(
             self.order_reference.clone(),
@@ -91,20 +105,24 @@ impl CardPaymentFlow {
     }
 
     pub fn resend_otp(&self) -> Result<ResendOtpResponse> {
-        self.charge.resend_customer_payment_otp(self.order_reference.clone())
+        self.charge
+            .resend_customer_payment_otp(self.order_reference.clone())
     }
 
     pub fn confirm(&self) -> Result<FetchCheckoutTransactionDetailsResponse> {
-        self.charge.fetch_checkout_transaction_details(self.order_reference.clone())
+        self.charge
+            .fetch_checkout_transaction_details(self.order_reference.clone())
     }
 
     pub fn cancel(&self, force: bool) -> Result<CancelCheckoutTransactionResponse> {
-        let transaction_id = self.transaction_id.as_ref()
-            .ok_or_else(|| crate::error::NombaError::validation(
+        let transaction_id = self.transaction_id.as_ref().ok_or_else(|| {
+            crate::error::NombaError::validation(
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
-            ))?;
-        self.charge.cancel_checkout_transaction(transaction_id.clone(), Some(force))
+            )
+        })?;
+        self.charge
+            .cancel_checkout_transaction(transaction_id.clone(), Some(force))
     }
 }
 
@@ -130,13 +148,16 @@ impl AsyncCardPaymentFlow {
         save_card: Option<bool>,
         device_information: Option<Value>,
     ) -> Result<CardPaymentStep> {
-        let raw = self.charge.submit_customer_card_details(
-            self.order_reference.clone(),
-            card_details,
-            key,
-            save_card,
-            device_information,
-        ).await?;
+        let raw = self
+            .charge
+            .submit_customer_card_details(
+                self.order_reference.clone(),
+                card_details,
+                key,
+                save_card,
+                device_information,
+            )
+            .await?;
         let raw_value = to_value(&raw)?;
         let step = interpret(raw_value, self.transaction_id.clone())?;
         self.transaction_id = step.transaction_id.clone();
@@ -144,36 +165,43 @@ impl AsyncCardPaymentFlow {
     }
 
     pub async fn submit_otp(&mut self, otp: impl Into<String>) -> Result<CardPaymentStep> {
-        let transaction_id = self.transaction_id.as_ref()
-            .ok_or_else(|| crate::error::NombaError::validation(
+        let transaction_id = self.transaction_id.as_ref().ok_or_else(|| {
+            crate::error::NombaError::validation(
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
-            ))?;
+            )
+        })?;
 
-        let raw = self.charge.submit_customer_payment_otp(
-            self.order_reference.clone(),
-            otp,
-            transaction_id.clone(),
-        ).await?;
+        let raw = self
+            .charge
+            .submit_customer_payment_otp(self.order_reference.clone(), otp, transaction_id.clone())
+            .await?;
         let raw_value = to_value(&raw)?;
         interpret(raw_value, self.transaction_id.clone())
     }
 
     pub async fn resend_otp(&self) -> Result<ResendOtpResponse> {
-        self.charge.resend_customer_payment_otp(self.order_reference.clone()).await
+        self.charge
+            .resend_customer_payment_otp(self.order_reference.clone())
+            .await
     }
 
     pub async fn confirm(&self) -> Result<FetchCheckoutTransactionDetailsResponse> {
-        self.charge.fetch_checkout_transaction_details(self.order_reference.clone()).await
+        self.charge
+            .fetch_checkout_transaction_details(self.order_reference.clone())
+            .await
     }
 
     pub async fn cancel(&self, force: bool) -> Result<CancelCheckoutTransactionResponse> {
-        let transaction_id = self.transaction_id.as_ref()
-            .ok_or_else(|| crate::error::NombaError::validation(
+        let transaction_id = self.transaction_id.as_ref().ok_or_else(|| {
+            crate::error::NombaError::validation(
                 "No transaction_id on this flow yet — call submit_card() first.".to_string(),
                 vec![],
-            ))?;
-        self.charge.cancel_checkout_transaction(transaction_id.clone(), Some(force)).await
+            )
+        })?;
+        self.charge
+            .cancel_checkout_transaction(transaction_id.clone(), Some(force))
+            .await
     }
 }
 

@@ -1,8 +1,7 @@
-use crate::http_client::BlockingNombaClient;
 use crate::error::Result;
+use crate::http_client::BlockingNombaClient;
 use crate::http_client::NombaClient;
 use crate::models::*;
-use serde_json::json;
 
 #[derive(Clone)]
 pub struct Transactions {
@@ -219,7 +218,10 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/bank", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/transactions/bank", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -287,7 +289,10 @@ impl AsyncTransactions {
         if let Some(cursor) = cursor {
             params.push(("cursor", cursor));
         }
-        let response = self.client.get("/v1/transactions/accounts", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/transactions/accounts", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -319,7 +324,10 @@ impl AsyncTransactions {
         if let Some(transaction_type) = transaction_type {
             params.push(("type", transaction_type));
         }
-        let response = self.client.get("/v1/transactions/accounts", Some(params)).await?;
+        let response = self
+            .client
+            .get("/v1/transactions/accounts", Some(params))
+            .await?;
         Ok(serde_json::from_value(response)?)
     }
 

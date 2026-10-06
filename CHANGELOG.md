@@ -3,6 +3,31 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0] - 2026-10-06
+
+### Changed
+
+- **Breaking:** `gather_limited` and `gather_limited_ordered` no longer take
+  the `return_exceptions` flag — it never had any effect (both paths returned
+  the first error). Both now take `(calls, limit)`.
+- `AsyncPaginator` no longer requires `Unpin` futures/closures, so natural
+  `async move` blocks work. It also keeps the in-flight request across polls
+  instead of restarting it on every wakeup.
+
+### Fixed
+
+- Removed the unused `serde_with` dependency.
+- Bundled OpenAPI spec extended with the current `POST /v2/bill/*` routes and
+  sandbox Global Payout paths, so `validate_body` now checks them instead of
+  silently passing.
+- `paginate`/`apaginate` docs and README show a working adapter from typed
+  resource methods to the raw-page closure (with compile-checked examples).
+- Clippy-clean: `too_many_arguments` exempted crate-wide (methods mirror the
+  API), plus `vec!`, `next_back`, `strip_suffix`, `is_some_and` cleanups and
+  removed dead `Nomba`/`AsyncNomba` client fields.
+- Documented that the blocking client must not be used from inside async code
+  (use `AsyncNomba` there).
+
 ## [0.1.0] - 2026-10-06
 
 First crates.io release as `nomba-rs` (author: Righteousness Ude,

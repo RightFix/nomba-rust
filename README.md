@@ -23,7 +23,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nomba-rs = "0.1"
+nomba-rs = "0.2"
 ```
 
 Or for local development:
@@ -39,7 +39,7 @@ nomba-rs = { path = "../nomba-rust" }
 - `validation` - Enable local request validation against OpenAPI spec
 
 ```toml
-nomba-rs = { version = "0.1", features = ["async", "validation"] }
+nomba-rs = { version = "0.2", features = ["async", "validation"] }
 ```
 
 ## Quick Start
@@ -321,26 +321,55 @@ fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba_rs::Re
 
 ## Pagination
 
+`paginate` takes a `(limit, cursor)` closure returning the raw page as
+`serde_json::Value`, and yields items deserialized from `results`.
+Adapt a typed resource method by serializing its `data` page:
+
 ```rust
 use nomba_rs::pagination::paginate;
+use std::collections::HashMap;
 
 // Sync pagination
-for account in paginate(|limit, cursor| {
-    nomba.virtual_accounts.filter_virtual_accounts(limit, cursor, None, None, None, None, None, None, None, None)
-}, Some(50)) {
-    println!("Account: {:?}", account?.account_ref);
+let accounts = paginate(
+    |limit, cursor| {
+        nomba.virtual_accounts.filter_virtual_accounts(
+            limit.map(|n| n.to_string()),
+            cursor,
+            None, None, None, None, None, None, None, None,
+        )
+        .and_then(|resp| serde_json::to_value(resp.data).map_err(nomba_rs::NombaError::from))
+    },
+    Some(50),
+);
+
+for account in accounts {
+    let account: HashMap<String, serde_json::Value> = account?;
+    println!("{:?}", account.get("accountRef"));
 }
 
-// Async pagination
+// Async pagination (a Stream)
 use nomba_rs::pagination::apaginate;
 use futures::StreamExt;
 
-let mut stream = apaginate(|limit, cursor| {
-    nomba.virtual_accounts.filter_virtual_accounts(limit, cursor, None, None, None, None, None, None, None, None)
-}, Some(50));
+let mut stream = apaginate(
+    |limit, cursor| {
+        let accounts = nomba.virtual_accounts.clone();
+        async move {
+            accounts.filter_virtual_accounts(
+                limit.map(|n| n.to_string()),
+                cursor,
+                None, None, None, None, None, None, None, None,
+            )
+            .await
+            .and_then(|resp| serde_json::to_value(resp.data).map_err(nomba_rs::NombaError::from))
+        }
+    },
+    Some(50),
+);
 
 while let Some(account) = stream.next().await {
-    println!("Account: {:?}", account?.account_ref);
+    let account: HashMap<String, serde_json::Value> = account?;
+    println!("{:?}", account.get("accountRef"));
 }
 ```
 
@@ -350,15 +379,15 @@ while let Some(account) = stream.next().await {
 use nomba_rs::concurrency::gather_limited;
 
 // Run up to 5 requests concurrently
-let calls: Vec<_> = account_refs.iter().map(|ref| {
+let calls: Vec<_> = account_refs.iter().map(|account_ref| {
     let nomba = nomba.clone();
-    let ref = ref.clone();
+    let account_ref = account_ref.clone();
     move || async move {
-        nomba.virtual_accounts.fetch_virtual_account(ref)
+        nomba.virtual_accounts.fetch_virtual_account(account_ref).await
     }
 }).collect();
 
-let results = gather_limited(calls, 5, false).await?;
+let results = gather_limited(calls, 5).await?;
 ```
 
 ## Error Handling
@@ -386,7 +415,7 @@ match nomba.virtual_accounts.create_virtual_account(...) {
 Enable the `validation` feature to validate requests locally before sending:
 
 ```toml
-nomba = { version = "0.1", features = ["validation"] }
+nomba = { version = "0.2", features = ["validation"] }
 ```
 
 ```rust

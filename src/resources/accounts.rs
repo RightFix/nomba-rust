@@ -49,8 +49,7 @@ impl Accounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<FetchAccountDetailsResponse> {
-        let mut params = Vec::new();
-        params.push(("accountId", account_id.into()));
+        let params = vec![("accountId", account_id.into())];
         let response = self
             .client
             .get("/v1/accounts/sub-account-details", Some(params))?;
@@ -176,8 +175,7 @@ impl AsyncAccounts {
         &self,
         account_id: impl Into<String>,
     ) -> Result<FetchAccountDetailsResponse> {
-        let mut params = Vec::new();
-        params.push(("accountId", account_id.into()));
+        let params = vec![("accountId", account_id.into())];
         let response = self
             .client
             .get("/v1/accounts/sub-account-details", Some(params))

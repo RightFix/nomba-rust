@@ -23,11 +23,10 @@ fn get_path(payload: &Value, path: &[&str], default: &str) -> String {
 
 fn parse_rfc3339(timestamp: &str) -> Result<DateTime<Utc>> {
     let ts = timestamp.trim();
-    let ts = if ts.ends_with('Z') {
-        format!("{} +00:00", &ts[..ts.len() - 1])
-    } else {
-        ts.to_string()
-    };
+    let ts = ts
+        .strip_suffix('Z')
+        .map(|s| format!("{s} +00:00"))
+        .unwrap_or_else(|| ts.to_string());
     DateTime::parse_from_rfc3339(&ts)
         .map(|dt| dt.with_timezone(&Utc))
         .map_err(|e| NombaError::validation(format!("Invalid timestamp format: {}", e), vec![]))
@@ -131,7 +130,6 @@ pub fn verify_webhook_request(
 mod tests {
     use super::*;
     use serde_json::json;
-    use std::collections::HashMap;
 
     #[test]
     fn test_compute_signature() {

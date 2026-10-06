@@ -17,7 +17,7 @@ fn resolve_path_item<'a>(
 ) -> Option<&'a PathItem> {
     match path_ref {
         ReferenceOr::Reference { reference } => {
-            let name = reference.split('/').last()?;
+            let name = reference.split('/').next_back()?;
             spec.paths.paths.get(name).and_then(|p| match p {
                 ReferenceOr::Item(item) => Some(item),
                 ReferenceOr::Reference { .. } => None,
@@ -30,7 +30,7 @@ fn resolve_path_item<'a>(
 fn resolve_schema<'a>(spec: &'a OpenAPI, schema: &'a ReferenceOr<Schema>) -> Option<&'a Schema> {
     match schema {
         ReferenceOr::Reference { reference } => {
-            let name = reference.split('/').last()?;
+            let name = reference.split('/').next_back()?;
             spec.components
                 .as_ref()?
                 .schemas
@@ -50,7 +50,7 @@ fn resolve_schema_boxed<'a>(
 ) -> Option<&'a Schema> {
     match schema {
         ReferenceOr::Reference { reference } => {
-            let name = reference.split('/').last()?;
+            let name = reference.split('/').next_back()?;
             spec.components
                 .as_ref()?
                 .schemas
@@ -70,7 +70,7 @@ fn resolve_request_body<'a>(
 ) -> Option<&'a RequestBody> {
     match rb_ref {
         ReferenceOr::Reference { reference } => {
-            let name = reference.split('/').last()?;
+            let name = reference.split('/').next_back()?;
             spec.components
                 .as_ref()?
                 .request_bodies

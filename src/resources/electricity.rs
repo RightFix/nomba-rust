@@ -24,9 +24,10 @@ impl Electricity {
         provider: impl Into<String>,
         meter_number: impl Into<String>,
     ) -> Result<ElectricityCustomerLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("meterNumber", meter_number.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("meterNumber", meter_number.into()),
+        ];
         let response = self
             .client
             .get("/v1/bill/electricity/lookup", Some(params))?;
@@ -106,9 +107,10 @@ impl AsyncElectricity {
         provider: impl Into<String>,
         meter_number: impl Into<String>,
     ) -> Result<ElectricityCustomerLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("meterNumber", meter_number.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("meterNumber", meter_number.into()),
+        ];
         let response = self
             .client
             .get("/v1/bill/electricity/lookup", Some(params))

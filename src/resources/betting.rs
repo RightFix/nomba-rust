@@ -24,9 +24,10 @@ impl Betting {
         provider: impl Into<String>,
         customer_id: impl Into<String>,
     ) -> Result<BettingCustomerLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("customerId", customer_id.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("customerId", customer_id.into()),
+        ];
         let response = self.client.get("/v1/bill/betting/lookup", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -96,9 +97,10 @@ impl AsyncBetting {
         provider: impl Into<String>,
         customer_id: impl Into<String>,
     ) -> Result<BettingCustomerLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("customerId", customer_id.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("customerId", customer_id.into()),
+        ];
         let response = self
             .client
             .get("/v1/bill/betting/lookup", Some(params))

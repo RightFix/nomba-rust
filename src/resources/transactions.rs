@@ -164,7 +164,7 @@ impl Transactions {
     ) -> Result<FetchTransactionResponse> {
         let params = vec![("transactionRef", transaction_id.into())];
         let path = "/v1/transactions/accounts/single";
-        let response = self.client.get(&path, Some(params))?;
+        let response = self.client.get(path, Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
 
@@ -348,7 +348,7 @@ impl AsyncTransactions {
     ) -> Result<FetchTransactionResponse> {
         let params = vec![("transactionRef", transaction_id.into())];
         let path = "/v1/transactions/accounts/single";
-        let response = self.client.get(&path, Some(params)).await?;
+        let response = self.client.get(path, Some(params)).await?;
         Ok(serde_json::from_value(response)?)
     }
 

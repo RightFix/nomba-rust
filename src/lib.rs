@@ -15,6 +15,10 @@
 //! # Ok::<(), nomba_rs::NombaError>(())
 //! ```
 
+// Resource methods mirror Nomba's API field-for-field, so long parameter
+// lists are intentional and exempted from the length lint.
+#![allow(clippy::too_many_arguments)]
+
 #[cfg(feature = "validation")]
 mod validation;
 

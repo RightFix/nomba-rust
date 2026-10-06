@@ -2,8 +2,13 @@ use crate::error::Result;
 use crate::http_client::{BlockingNombaClient, NombaClient, NombaClientConfig};
 use crate::resources::{AsyncAuth, Auth, *};
 
+/// High-level sync client. Holds one resource handle per API group; each
+/// handle shares the same underlying HTTP connection pool and token cache.
+///
+/// Note: the blocking client drives its own Tokio runtime internally, so do
+/// not construct or use it from inside async code — use [`AsyncNomba`] there
+/// instead (nesting runtimes will panic).
 pub struct Nomba {
-    client: BlockingNombaClient,
     pub accounts: Accounts,
     pub virtual_accounts: VirtualAccounts,
     pub checkout: Checkout,
@@ -68,7 +73,6 @@ impl Nomba {
         let auth = Auth::new(client.clone());
 
         Ok(Self {
-            client,
             accounts,
             virtual_accounts,
             checkout,
@@ -95,8 +99,9 @@ impl Nomba {
     }
 }
 
+/// High-level async client. Same resource layout as [`Nomba`]; every method
+/// is `async` and must be `.await`ed.
 pub struct AsyncNomba {
-    client: NombaClient,
     pub accounts: AsyncAccounts,
     pub virtual_accounts: AsyncVirtualAccounts,
     pub checkout: AsyncCheckout,
@@ -161,7 +166,6 @@ impl AsyncNomba {
         let auth = AsyncAuth::new(client.clone());
 
         Ok(Self {
-            client,
             accounts,
             virtual_accounts,
             checkout,

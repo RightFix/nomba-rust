@@ -35,9 +35,10 @@ impl CableTv {
         provider: impl Into<String>,
         smart_card_number: impl Into<String>,
     ) -> Result<CableTvLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("smartCardNumber", smart_card_number.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("smartCardNumber", smart_card_number.into()),
+        ];
         let response = self.client.get("/v1/bill/cabletv/lookup", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -140,8 +141,7 @@ impl CableTv {
         &self,
         cable_tv_type: impl Into<String>,
     ) -> Result<FetchCableTvPlansResponse> {
-        let mut params = Vec::new();
-        params.push(("cableTvType", cable_tv_type.into()));
+        let params = vec![("cableTvType", cable_tv_type.into())];
         let response = self.client.get("/v1/bill/cableTvProduct", Some(params))?;
         Ok(serde_json::from_value(response)?)
     }
@@ -165,9 +165,10 @@ impl AsyncCableTv {
         provider: impl Into<String>,
         smart_card_number: impl Into<String>,
     ) -> Result<CableTvLookupResponse> {
-        let mut params = Vec::new();
-        params.push(("provider", provider.into()));
-        params.push(("smartCardNumber", smart_card_number.into()));
+        let params = vec![
+            ("provider", provider.into()),
+            ("smartCardNumber", smart_card_number.into()),
+        ];
         let response = self
             .client
             .get("/v1/bill/cabletv/lookup", Some(params))
@@ -232,8 +233,7 @@ impl AsyncCableTv {
         &self,
         cable_tv_type: impl Into<String>,
     ) -> Result<FetchCableTvPlansResponse> {
-        let mut params = Vec::new();
-        params.push(("cableTvType", cable_tv_type.into()));
+        let params = vec![("cableTvType", cable_tv_type.into())];
         let response = self
             .client
             .get("/v1/bill/cableTvProduct", Some(params))

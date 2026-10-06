@@ -24,7 +24,7 @@ impl TokenCache {
     }
 
     fn is_valid(&self) -> bool {
-        self.access_token.is_some() && self.expires_at.map_or(false, |exp| Instant::now() < exp)
+        self.access_token.is_some() && self.expires_at.is_some_and(|exp| Instant::now() < exp)
     }
 
     fn invalidate(&mut self) {

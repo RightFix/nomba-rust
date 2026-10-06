@@ -1,6 +1,6 @@
 [package]
 name = "nomba-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Righteousness Ude"]
@@ -27,7 +27,6 @@ tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "tim
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_with = "3.0"
 
 # Error handling
 thiserror = "1.0"

@@ -2,11 +2,9 @@ use crate::error::Result;
 use futures::future::BoxFuture;
 use tokio::sync::Semaphore;
 
-pub async fn gather_limited<F, Fut, T>(
-    calls: Vec<F>,
-    limit: usize,
-    return_exceptions: bool,
-) -> Result<Vec<T>>
+/// Runs async closures with at most `limit` in flight, collecting results
+/// in completion order. The first error aborts the whole batch.
+pub async fn gather_limited<F, Fut, T>(calls: Vec<F>, limit: usize) -> Result<Vec<T>>
 where
     F: FnOnce() -> Fut + Send + 'static,
     Fut: std::future::Future<Output = Result<T>> + Send + 'static,
@@ -29,13 +27,7 @@ where
         match handle.await {
             Ok(Ok(val)) => results.push(val),
             Ok(Err(e)) => {
-                if return_exceptions {
-                    // We can't easily return the error as a value in Rust like Python
-                    // So we'll just return the error
-                    return Err(e);
-                } else {
-                    return Err(e);
-                }
+                return Err(e);
             }
             Err(e) => {
                 return Err(crate::error::NombaError::api(format!(
@@ -49,11 +41,9 @@ where
     Ok(results)
 }
 
-pub async fn gather_limited_ordered<F, Fut, T>(
-    calls: Vec<F>,
-    limit: usize,
-    return_exceptions: bool,
-) -> Result<Vec<T>>
+/// Runs async closures with at most `limit` in flight, collecting results
+/// in input order. The first error aborts the whole batch.
+pub async fn gather_limited_ordered<F, Fut, T>(calls: Vec<F>, limit: usize) -> Result<Vec<T>>
 where
     F: FnOnce() -> Fut + Send + 'static,
     Fut: std::future::Future<Output = Result<T>> + Send + 'static,
@@ -71,14 +61,7 @@ where
         futures.push(fut);
     }
 
-    let results = if return_exceptions {
-        // In Rust, we'd need to wrap in Result, but for now just use futures::future::join_all
-        // and handle errors
-        let results: Vec<Result<T>> = futures::future::join_all(futures).await;
-        results.into_iter().collect::<Result<Vec<T>>>()?
-    } else {
-        futures::future::try_join_all(futures).await?
-    };
+    let results = futures::future::try_join_all(futures).await?;
 
     Ok(results)
 }
@@ -86,7 +69,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Result;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
     use std::time::Duration;
@@ -108,7 +90,7 @@ mod tests {
             });
         }
 
-        let results = gather_limited(calls, 3, false).await.unwrap();
+        let results = gather_limited(calls, 3).await.unwrap();
         assert_eq!(results.len(), 10);
     }
 }

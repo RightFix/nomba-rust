@@ -590,11 +590,31 @@ pub struct DataVendingResponse {
     pub data: AirtimePurchaseData,
 }
 
+/// Plan/provider list payload. Nomba returns `data` as an array of
+/// products on some apps/endpoints and as a keyed object on others, so
+/// accept both instead of failing deserialization on one shape.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PlanListData {
+    List(Vec<serde_json::Value>),
+    Map(HashMap<String, serde_json::Value>),
+}
+
+impl PlanListData {
+    /// Borrow the payload as a list of products, if it is one.
+    pub fn as_list(&self) -> Option<&[serde_json::Value]> {
+        match self {
+            PlanListData::List(v) => Some(v),
+            PlanListData::Map(_) => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchDataPlansResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: PlanListData,
 }
 
 /// CableTV models
@@ -636,7 +656,7 @@ pub struct ElectricityProviderData {
 pub struct FetchElectricityProvidersResponse {
     pub code: String,
     pub description: String,
-    pub data: ElectricityProviderData,
+    pub data: Vec<ElectricityProviderData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -671,7 +691,7 @@ pub struct VendElectricityResponse {
 pub struct FetchBettingProvidersResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: PlanListData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1080,4 +1100,38 @@ pub struct FetchCableTvPlansResponse {
     pub description: String,
     pub data: Vec<CableTvPlanData>,
     pub message: String,
+}
+
+#[cfg(test)]
+mod plan_shape_tests {
+    use super::*;
+
+    const DATA_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","message":"SUCCESS","status":true,"data":[{"plan":"110MB Daily Plan","amount":100,"productId":"mtn1"}]}"#;
+    const DATA_MAP: &str = r#"{"code":"00","description":"ok","data":{"mtn1":{"plan":"110MB","amount":100}}}"#;
+    const BETTING_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","data":[{"id":"bet9ja","name":"BET9JA"}]}"#;
+    const DISCOS_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","data":[{"id":"phed","name":"Port Harcourt (PHED)"}]}"#;
+
+    #[test]
+    fn data_plans_accept_array_and_map() {
+        let arr: FetchDataPlansResponse = serde_json::from_str(DATA_ARRAY).unwrap();
+        assert_eq!(arr.code, "00");
+        assert!(matches!(arr.data, PlanListData::List(ref v) if v.len() == 1));
+        assert!(arr.data.as_list().is_some());
+        let map: FetchDataPlansResponse = serde_json::from_str(DATA_MAP).unwrap();
+        assert!(matches!(map.data, PlanListData::Map(_)));
+        assert!(map.data.as_list().is_none());
+    }
+
+    #[test]
+    fn betting_providers_accept_array() {
+        let r: FetchBettingProvidersResponse = serde_json::from_str(BETTING_ARRAY).unwrap();
+        assert!(matches!(r.data, PlanListData::List(ref v) if v.len() == 1));
+    }
+
+    #[test]
+    fn discos_parse_as_list() {
+        let r: FetchElectricityProvidersResponse = serde_json::from_str(DISCOS_ARRAY).unwrap();
+        assert_eq!(r.data.len(), 1);
+        assert_eq!(r.data[0].id, "phed");
+    }
 }

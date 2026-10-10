@@ -3,6 +3,23 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.0] - 2026-10-10
+
+### Fixed
+
+- Plan/provider list responses no longer fail deserialization when Nomba
+  returns `data` as an array: `FetchDataPlansResponse.data` and
+  `FetchBettingProvidersResponse.data` are now the new `PlanListData`
+  untagged enum (`List(Vec<Value>)` / `Map(HashMap<String, Value>)`,
+  with an `as_list()` helper) instead of a bare `HashMap`, and
+  `FetchElectricityProvidersResponse.data` is now
+  `Vec<ElectricityProviderData>` (the discos endpoint returns a list of
+  `{id, name}`, not one object). Verified against live sandbox
+  responses for data plans, betting providers, and discos.
+- **Breaking:** the three `data` field types above changed; match on
+  `PlanListData` (or serialize the response back to `Value`) instead of
+  using them as maps/structs directly.
+
 ## [0.2.0] - 2026-10-06
 
 ### Changed

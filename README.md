@@ -60,7 +60,7 @@ fn main() -> nomba_rs::Result<()> {
     let account = nomba.virtual_accounts.create_virtual_account(
         "ref-123",
         "Jane Doe",
-        None, None, None
+        None, None, None, None
     )?;
     
     println!("Created account: {:?}", account.data.account_ref);
@@ -82,10 +82,11 @@ async fn main() -> nomba_rs::Result<()> {
     ).await?;
 
     // Create a virtual account
+    // Pass a NIN (or BVN) to create the account against it:
     let account = nomba.virtual_accounts.create_virtual_account(
         "ref-123",
         "Jane Doe",
-        None, None, None
+        None, Some("12345678901".to_string()), None, None
     ).await?;
     
     println!("Created account: {:?}", account.data.account_ref);

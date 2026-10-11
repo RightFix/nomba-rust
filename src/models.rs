@@ -159,7 +159,13 @@ pub struct VirtualAccountData {
     pub account_holder_id: String,
     #[serde(rename = "accountRef")]
     pub account_ref: String,
-    pub bvn: String,
+    /// Absent when the account was created against a NIN.
+    pub bvn: Option<String>,
+    /// Present when the account was created against a NIN.
+    pub nin: Option<String>,
+    /// `BVN`, `NIN` or `BVN_AND_NIN`; omitted when there is no identifier.
+    #[serde(rename = "identifierType")]
+    pub identifier_type: Option<String>,
     #[serde(rename = "accountName")]
     pub account_name: String,
     #[serde(rename = "bankName")]
@@ -1133,5 +1139,22 @@ mod plan_shape_tests {
         let r: FetchElectricityProvidersResponse = serde_json::from_str(DISCOS_ARRAY).unwrap();
         assert_eq!(r.data.len(), 1);
         assert_eq!(r.data[0].id, "phed");
+    }
+}
+
+#[cfg(test)]
+mod virtual_account_nin_tests {
+    use super::*;
+
+    const NIN_ONLY: &str = r#"{"code":"00","description":"Success","data":{"createdAt":"2026-10-11T10:00:00.000Z","accountHolderId":"01a10aeb-d989-460a-bbde-9842f2b4320f","accountRef":"BS-NOMBA-DVA-1","nin":"12345678901","identifierType":"NIN","accountName":"Test User","bankName":"Nombank MFB","bankAccountNumber":"9391076543","bankAccountName":"Nomba/Test User","currency":"NGN","callbackUrl":"https://example.com/hook","expired":false}}"#;
+
+    #[test]
+    fn nin_only_response_parses_without_bvn() {
+        let r: CreateVirtualAccountResponse = serde_json::from_str(NIN_ONLY).unwrap();
+        assert_eq!(r.code, "00");
+        assert_eq!(r.data.nin.as_deref(), Some("12345678901"));
+        assert_eq!(r.data.identifier_type.as_deref(), Some("NIN"));
+        assert!(r.data.bvn.is_none());
+        assert_eq!(r.data.bank_account_number, "9391076543");
     }
 }

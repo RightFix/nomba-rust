@@ -10,7 +10,7 @@
 //! let account = nomba.virtual_accounts.create_virtual_account(
 //!     "ref-123",
 //!     "Jane Doe",
-//!     None, None, None
+//!     None, None, None, None
 //! )?;
 //! # Ok::<(), nomba_rs::NombaError>(())
 //! ```

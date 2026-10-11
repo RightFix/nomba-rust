@@ -3,6 +3,29 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0] - 2026-10-11
+
+### Added
+
+- `nin` support on virtual-account creation: all four
+  `create_virtual_account[_for_sub_account]` constructors (blocking and
+  async) take a new `nin: Option<String>` parameter, sent as the
+  documented 11-digit `nin` body field on its own or alongside `bvn`.
+  Shared `build_virtual_account_body` helper plus unit tests.
+- `VirtualAccountData` now exposes the identifier the account was
+  created against: `nin` and `identifierType` (`BVN`/`NIN`/`BVN_AND_NIN`)
+  as `Option`s, and `bvn` relaxed to `Option` (absent on NIN-only
+  accounts — previously a required `String`, which failed
+  deserialization of NIN-created accounts).
+- Bundled OpenAPI spec gains the `nin` property on
+  `CreateVirtualAccountRequest`; README shows the NIN call shape.
+
+### Changed
+
+- **Breaking:** the four virtual-account constructors take one more
+  argument (`nin` after `bvn`); `VirtualAccountData.bvn` is now
+  `Option<String>`.
+
 ## [0.3.0] - 2026-10-10
 
 ### Fixed

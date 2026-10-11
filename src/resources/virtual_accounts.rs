@@ -4,6 +4,36 @@ use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
 
+/// Request body for virtual-account creation. `nin` (11 digits) may be
+/// sent on its own or alongside `bvn`; when neither is sent Nomba falls
+/// back to the parent business account's BVN.
+pub fn build_virtual_account_body(
+    account_ref: String,
+    account_name: String,
+    bvn: Option<String>,
+    nin: Option<String>,
+    expiry_date: Option<String>,
+    expected_amount: Option<String>,
+) -> serde_json::Value {
+    let mut body = json!({
+        "accountRef": account_ref,
+        "accountName": account_name,
+    });
+    if let Some(bvn) = bvn {
+        body["bvn"] = json!(bvn);
+    }
+    if let Some(nin) = nin {
+        body["nin"] = json!(nin);
+    }
+    if let Some(expiry_date) = expiry_date {
+        body["expiryDate"] = json!(expiry_date);
+    }
+    if let Some(expected_amount) = expected_amount {
+        body["expectedAmount"] = json!(expected_amount);
+    }
+    body
+}
+
 #[derive(Clone)]
 pub struct VirtualAccounts {
     client: BlockingNombaClient,
@@ -19,23 +49,18 @@ impl VirtualAccounts {
         account_ref: impl Into<String>,
         account_name: impl Into<String>,
         bvn: Option<String>,
+        nin: Option<String>,
         expiry_date: Option<String>,
         expected_amount: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
-        let mut body = json!({
-            "accountRef": account_ref.into(),
-            "accountName": account_name.into(),
-        });
-
-        if let Some(bvn) = bvn {
-            body["bvn"] = json!(bvn);
-        }
-        if let Some(expiry_date) = expiry_date {
-            body["expiryDate"] = json!(expiry_date);
-        }
-        if let Some(expected_amount) = expected_amount {
-            body["expectedAmount"] = json!(expected_amount);
-        }
+        let body = build_virtual_account_body(
+            account_ref.into(),
+            account_name.into(),
+            bvn,
+            nin,
+            expiry_date,
+            expected_amount,
+        );
 
         let response = self.client.post("/v1/accounts/virtual", &body, None)?;
         Ok(serde_json::from_value(response)?)
@@ -47,23 +72,18 @@ impl VirtualAccounts {
         account_ref: impl Into<String>,
         account_name: impl Into<String>,
         bvn: Option<String>,
+        nin: Option<String>,
         expiry_date: Option<String>,
         expected_amount: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
-        let mut body = json!({
-            "accountRef": account_ref.into(),
-            "accountName": account_name.into(),
-        });
-
-        if let Some(bvn) = bvn {
-            body["bvn"] = json!(bvn);
-        }
-        if let Some(expiry_date) = expiry_date {
-            body["expiryDate"] = json!(expiry_date);
-        }
-        if let Some(expected_amount) = expected_amount {
-            body["expectedAmount"] = json!(expected_amount);
-        }
+        let body = build_virtual_account_body(
+            account_ref.into(),
+            account_name.into(),
+            bvn,
+            nin,
+            expiry_date,
+            expected_amount,
+        );
 
         let path = format!("/v1/accounts/virtual/{}", sub_account_id.into());
         let response = self.client.post(&path, &body, None)?;
@@ -184,23 +204,18 @@ impl AsyncVirtualAccounts {
         account_ref: impl Into<String>,
         account_name: impl Into<String>,
         bvn: Option<String>,
+        nin: Option<String>,
         expiry_date: Option<String>,
         expected_amount: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
-        let mut body = json!({
-            "accountRef": account_ref.into(),
-            "accountName": account_name.into(),
-        });
-
-        if let Some(bvn) = bvn {
-            body["bvn"] = json!(bvn);
-        }
-        if let Some(expiry_date) = expiry_date {
-            body["expiryDate"] = json!(expiry_date);
-        }
-        if let Some(expected_amount) = expected_amount {
-            body["expectedAmount"] = json!(expected_amount);
-        }
+        let body = build_virtual_account_body(
+            account_ref.into(),
+            account_name.into(),
+            bvn,
+            nin,
+            expiry_date,
+            expected_amount,
+        );
 
         let response = self
             .client
@@ -215,23 +230,18 @@ impl AsyncVirtualAccounts {
         account_ref: impl Into<String>,
         account_name: impl Into<String>,
         bvn: Option<String>,
+        nin: Option<String>,
         expiry_date: Option<String>,
         expected_amount: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
-        let mut body = json!({
-            "accountRef": account_ref.into(),
-            "accountName": account_name.into(),
-        });
-
-        if let Some(bvn) = bvn {
-            body["bvn"] = json!(bvn);
-        }
-        if let Some(expiry_date) = expiry_date {
-            body["expiryDate"] = json!(expiry_date);
-        }
-        if let Some(expected_amount) = expected_amount {
-            body["expectedAmount"] = json!(expected_amount);
-        }
+        let body = build_virtual_account_body(
+            account_ref.into(),
+            account_name.into(),
+            bvn,
+            nin,
+            expiry_date,
+            expected_amount,
+        );
 
         let path = format!("/v1/accounts/virtual/{}", sub_account_id.into());
         let response = self.client.post(&path, &body, None).await?;
@@ -335,5 +345,55 @@ impl AsyncVirtualAccounts {
         let path = format!("/v1/accounts/virtual/{}", identifier.into());
         let response = self.client.delete(&path, None).await?;
         Ok(serde_json::from_value(response)?)
+    }
+}
+
+#[cfg(test)]
+mod virtual_account_body_tests {
+    use super::build_virtual_account_body;
+
+    #[test]
+    fn nin_sent_alone() {
+        let b = build_virtual_account_body(
+            "BS-NOMBA-DVA-1".to_string(),
+            "Test User".to_string(),
+            None,
+            Some("12345678901".to_string()),
+            None,
+            None,
+        );
+        assert_eq!(b["nin"], "12345678901");
+        assert!(b.get("bvn").is_none());
+        assert_eq!(b["accountRef"], "BS-NOMBA-DVA-1");
+    }
+
+    #[test]
+    fn nin_and_bvn_sent_together() {
+        let b = build_virtual_account_body(
+            "ref".to_string(),
+            "Name Here".to_string(),
+            Some("12345678901".to_string()),
+            Some("12345678901".to_string()),
+            Some("2027-01-30 12:15:00".to_string()),
+            Some("200.00".to_string()),
+        );
+        assert_eq!(b["bvn"], "12345678901");
+        assert_eq!(b["nin"], "12345678901");
+        assert_eq!(b["expiryDate"], "2027-01-30 12:15:00");
+        assert_eq!(b["expectedAmount"], "200.00");
+    }
+
+    #[test]
+    fn neither_identifier_omits_both() {
+        let b = build_virtual_account_body(
+            "ref".to_string(),
+            "Name Here".to_string(),
+            None,
+            None,
+            None,
+            None,
+        );
+        assert!(b.get("bvn").is_none());
+        assert!(b.get("nin").is_none());
     }
 }

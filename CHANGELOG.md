@@ -3,6 +3,14 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.1] - 2026-10-12
+
+### Fixed
+
+- `VirtualAccountData.callback_url` is now `Option<String>`: the API
+  omits it on some accounts (verified against a live NIN-created sandbox
+  account), which failed deserialization of every such response.
+
 ## [0.4.0] - 2026-10-11
 
 ### Added

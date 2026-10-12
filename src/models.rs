@@ -175,8 +175,10 @@ pub struct VirtualAccountData {
     #[serde(rename = "bankAccountName")]
     pub bank_account_name: String,
     pub currency: String,
-    #[serde(rename = "callbackUrl")]
-    pub callback_url: String,
+    /// Omitted by the API on some accounts (e.g. NIN-created sandbox
+    /// accounts) — optional for that reason, not because callers omit it.
+    #[serde(rename = "callbackUrl", default)]
+    pub callback_url: Option<String>,
     pub expired: bool,
 }
 
@@ -1156,5 +1158,14 @@ mod virtual_account_nin_tests {
         assert_eq!(r.data.identifier_type.as_deref(), Some("NIN"));
         assert!(r.data.bvn.is_none());
         assert_eq!(r.data.bank_account_number, "9391076543");
+    }
+
+    #[test]
+    fn nin_response_without_callback_url_parses() {
+        // Live sandbox shape: no `bvn`, no `callbackUrl` at all.
+        let raw = NIN_ONLY.replace(",\"callbackUrl\":\"https://example.com/hook\"", "");
+        let r: CreateVirtualAccountResponse = serde_json::from_str(&raw).unwrap();
+        assert!(r.data.callback_url.is_none());
+        assert_eq!(r.data.nin.as_deref(), Some("12345678901"));
     }
 }

@@ -3,6 +3,15 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.2] - 2026-10-12
+
+### Fixed
+
+- Sandbox checkout orders now send the nested `{"order": ...}` body
+  (flat bodies fail sandbox validation with `[order: order can not be
+  null]`); live keeps the flat shape. Shared `checkout_order_body`
+  helper with unit tests for both shapes.
+
 ## [0.4.1] - 2026-10-12
 
 ### Fixed

@@ -4,6 +4,49 @@ use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
 
+/// Checkout order body. The sandbox requires the nested `{"order": ...}`
+/// shape (flat bodies 400 with `[order: order can not be null]`); live
+/// takes the flat shape.
+pub fn checkout_order_body(
+    sandbox: bool,
+    order_reference: String,
+    amount: String,
+    currency: String,
+    customer_email: String,
+    customer_name: String,
+    redirect_url: String,
+    description: Option<String>,
+    metadata: Option<serde_json::Value>,
+) -> serde_json::Value {
+    if sandbox {
+        return json!({
+            "order": {
+                "orderReference": order_reference,
+                "amount": amount,
+                "currency": currency,
+                "customerEmail": customer_email,
+                "callbackUrl": redirect_url,
+            }
+        });
+    }
+    let mut body = json!({
+        "orderReference": order_reference,
+        "amount": amount,
+        "currency": currency,
+        "customerEmail": customer_email,
+        "customerName": customer_name,
+        "redirectUrl": redirect_url,
+    });
+
+    if let Some(description) = description {
+        body["description"] = json!(description);
+    }
+    if let Some(metadata) = metadata {
+        body["metadata"] = metadata;
+    }
+    body
+}
+
 #[derive(Clone)]
 pub struct Checkout {
     client: BlockingNombaClient,
@@ -25,21 +68,17 @@ impl Checkout {
         description: Option<String>,
         metadata: Option<serde_json::Value>,
     ) -> Result<CreateCheckoutOrderResponse> {
-        let mut body = json!({
-            "orderReference": order_reference.into(),
-            "amount": amount.into(),
-            "currency": currency.into(),
-            "customerEmail": customer_email.into(),
-            "customerName": customer_name.into(),
-            "redirectUrl": redirect_url.into(),
-        });
-
-        if let Some(description) = description {
-            body["description"] = json!(description);
-        }
-        if let Some(metadata) = metadata {
-            body["metadata"] = metadata;
-        }
+        let body = checkout_order_body(
+            self.client.inner.config.sandbox,
+            order_reference.into(),
+            amount.into(),
+            currency.into(),
+            customer_email.into(),
+            customer_name.into(),
+            redirect_url.into(),
+            description,
+            metadata,
+        );
 
         let response = self.client.post("/v1/checkout/order", &body, None)?;
         Ok(serde_json::from_value(response)?)
@@ -350,21 +389,17 @@ impl AsyncCheckout {
         description: Option<String>,
         metadata: Option<serde_json::Value>,
     ) -> Result<CreateCheckoutOrderResponse> {
-        let mut body = json!({
-            "orderReference": order_reference.into(),
-            "amount": amount.into(),
-            "currency": currency.into(),
-            "customerEmail": customer_email.into(),
-            "customerName": customer_name.into(),
-            "redirectUrl": redirect_url.into(),
-        });
-
-        if let Some(description) = description {
-            body["description"] = json!(description);
-        }
-        if let Some(metadata) = metadata {
-            body["metadata"] = metadata;
-        }
+        let body = checkout_order_body(
+            self.client.config.sandbox,
+            order_reference.into(),
+            amount.into(),
+            currency.into(),
+            customer_email.into(),
+            customer_name.into(),
+            redirect_url.into(),
+            description,
+            metadata,
+        );
 
         let response = self.client.post("/v1/checkout/order", &body, None).await?;
         Ok(serde_json::from_value(response)?)
@@ -670,5 +705,40 @@ impl AsyncCheckout {
             .delete("/v1/checkout/tokenized-card-data", Some(params))
             .await?;
         Ok(serde_json::from_value(response)?)
+    }
+}
+
+#[cfg(test)]
+mod checkout_body_tests {
+    use super::checkout_order_body;
+
+    fn args() -> (String, String, String, String, String, String) {
+        (
+            "BS-DEP-1".to_string(),
+            "500.00".to_string(),
+            "NGN".to_string(),
+            "a@b.com".to_string(),
+            "A B".to_string(),
+            "https://example.com".to_string(),
+        )
+    }
+
+    #[test]
+    fn sandbox_body_is_nested() {
+        let (r, a, c, e, n, u) = args();
+        let b = checkout_order_body(true, r, a, c, e, n, u, None, None);
+        let o = &b["order"];
+        assert_eq!(o["orderReference"], "BS-DEP-1");
+        assert_eq!(o["callbackUrl"], "https://example.com");
+        assert!(b.get("orderReference").is_none());
+    }
+
+    #[test]
+    fn live_body_is_flat() {
+        let (r, a, c, e, n, u) = args();
+        let b = checkout_order_body(false, r, a, c, e, n, u, None, None);
+        assert_eq!(b["orderReference"], "BS-DEP-1");
+        assert_eq!(b["customerName"], "A B");
+        assert!(b.get("order").is_none());
     }
 }

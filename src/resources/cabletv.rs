@@ -52,6 +52,7 @@ impl CableTv {
     /// * `amount` - Subscription amount in kobo
     /// * `merchant_tx_ref` - Unique transaction reference
     /// * `phone_number` - Optional customer phone number
+    /// * `payer_name` - Optional payer name (account owner)
     ///
     /// # Returns
     /// A [`CableTvSubscriptionResponse`] with transaction details.
@@ -63,6 +64,7 @@ impl CableTv {
         amount: f64,
         merchant_tx_ref: impl Into<String>,
         phone_number: Option<String>,
+        payer_name: Option<String>,
     ) -> Result<CableTvSubscriptionResponse> {
         let mut body = json!({
             "provider": provider.into(),
@@ -73,6 +75,9 @@ impl CableTv {
         });
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
+        }
+        if let Some(payer_name) = payer_name {
+            body["payerName"] = json!(payer_name);
         }
         let response = self.client.post("/v2/bill/cabletv", &body, None)?;
         Ok(serde_json::from_value(response)?)
@@ -88,6 +93,7 @@ impl CableTv {
     /// * `amount` - Subscription amount in kobo
     /// * `merchant_tx_ref` - Unique transaction reference
     /// * `phone_number` - Optional customer phone number
+    /// * `payer_name` - Optional payer name (account owner)
     ///
     /// # Returns
     /// A [`CableTvSubscriptionResponse`] with transaction details.
@@ -100,6 +106,7 @@ impl CableTv {
         amount: f64,
         merchant_tx_ref: impl Into<String>,
         phone_number: Option<String>,
+        payer_name: Option<String>,
     ) -> Result<CableTvSubscriptionResponse> {
         let mut body = json!({
             "provider": provider.into(),
@@ -110,6 +117,9 @@ impl CableTv {
         });
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
+        }
+        if let Some(payer_name) = payer_name {
+            body["payerName"] = json!(payer_name);
         }
         let path = format!("/v2/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None)?;
@@ -185,6 +195,7 @@ impl AsyncCableTv {
         amount: f64,
         merchant_tx_ref: impl Into<String>,
         phone_number: Option<String>,
+        payer_name: Option<String>,
     ) -> Result<CableTvSubscriptionResponse> {
         let mut body = json!({
             "provider": provider.into(),
@@ -195,6 +206,9 @@ impl AsyncCableTv {
         });
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
+        }
+        if let Some(payer_name) = payer_name {
+            body["payerName"] = json!(payer_name);
         }
         let response = self.client.post("/v2/bill/cabletv", &body, None).await?;
         Ok(serde_json::from_value(response)?)
@@ -210,6 +224,7 @@ impl AsyncCableTv {
         amount: f64,
         merchant_tx_ref: impl Into<String>,
         phone_number: Option<String>,
+        payer_name: Option<String>,
     ) -> Result<CableTvSubscriptionResponse> {
         let mut body = json!({
             "provider": provider.into(),
@@ -220,6 +235,9 @@ impl AsyncCableTv {
         });
         if let Some(phone_number) = phone_number {
             body["phoneNumber"] = json!(phone_number);
+        }
+        if let Some(payer_name) = payer_name {
+            body["payerName"] = json!(payer_name);
         }
         let path = format!("/v2/bill/cabletv/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;

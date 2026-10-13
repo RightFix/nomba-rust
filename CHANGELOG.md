@@ -3,6 +3,20 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.0] - 2026-10-13
+
+### Added
+
+- Optional `payer_name` on cable TV subscriptions: all four
+  `subscribe_parent` / `subscribe_account` constructors (blocking and
+  async) take a new `payer_name: Option<String>` parameter, sent as the
+  `payerName` body field when `Some` (use the account owner's name).
+
+### Changed
+
+- **Breaking:** the four cable subscribe constructors take one more
+  argument (`payer_name` after `phone_number`).
+
 ## [0.4.2] - 2026-10-12
 
 ### Fixed

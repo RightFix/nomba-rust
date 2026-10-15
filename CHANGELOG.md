@@ -3,6 +3,41 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.1] - 2026-10-15
+
+### Removed
+
+- **Breaking:** the entire synchronous (blocking) API is gone — the crate is
+  now async-only on Tokio. Removed `Nomba`'s blocking twin set: all `Async*`
+  prefixes are dropped and the async types take the base names (`Nomba`,
+  `Accounts`, `Checkout`, `CardPaymentFlow`, `paginate`, `Paginator`, …).
+  The `blocking` / `async` Cargo features are removed; only `validation`
+  remains. Migration: add `.await` to every call and run under Tokio.
+
+### Added
+
+- Optional `idempotency_key` on `authorize_transfer` and
+  `authorize_exchange`; responses expose echoed `idempotency_key` and
+  `idempotent_replay`.
+- Optional `restrict_inflow_to_account_name` on virtual-account creation.
+- Typed bill/lookup shapes from the live API docs: `DataPlan`,
+  `CustomerLookupData` (string-or-map with `name()`), `ElectricityCustomerData`
+  (with `address`), `BankData` (`code`/`name`/`nipCode`/`logo`),
+  `BankAccountLookupData`, `InflowProviderData`, `ExchangeRateData`.
+- New response fields: bill data `id`/`source`/`customerBillerId`/`productId`
+  cohorts, collection `vendor`/`gatewayMessage`/`gatewayCode`, payout
+  `idempotencyKey`/`idempotentReplay`, virtual-account
+  `restrictInflowToAccountName`.
+
+### Changed
+
+- `Electricity::customer_lookup` moved to `GET /v2/bill/electricity/lookup`
+  (v1 lookup deprecated) with `(disco, customer_id)` parameters.
+- `update_virtual_account` no longer takes `callback_url` (dropped by the API).
+- Vending `fee` is now optional (absent on v2 responses).
+- New `tests/fixtures/` live-shape conformance suite: documentation example
+  payloads asserted against the response structs.
+
 ## [0.5.0] - 2026-10-13
 
 ### Added

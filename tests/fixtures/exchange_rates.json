@@ -1,0 +1,9 @@
+{
+  "code": "00",
+  "description": "Successful",
+  "data": {
+    "rates": [
+      {"exchangeRateId": "01kkk7pab9mjt70wvk6pzk8mzx", "currencyPairName": "EUR/USD", "bidRate": "$1.13", "askRate": "$1.14", "midRate": "$1.14", "createdAt": "2026-03-13T09:15:57.161946"}
+    ]
+  }
+}

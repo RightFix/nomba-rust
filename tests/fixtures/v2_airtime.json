@@ -1,0 +1,17 @@
+{
+  "code": "200",
+  "description": "SUCCESS",
+  "data": {
+    "id": "API-TOPUP-A6950-8c060b7c-4155-4e33-a846-101b49229c33",
+    "status": "SUCCESS",
+    "type": "topup",
+    "amount": 100,
+    "source": "api",
+    "sourceUserId": null,
+    "customerBillerId": "08123456788",
+    "productId": "62130",
+    "meta": {"merchantTxRef": "REF-29-07-2026-12", "network": "mtn"},
+    "userId": null,
+    "timeCreated": "2026-09-26T19:47:01.514+00:00"
+  }
+}

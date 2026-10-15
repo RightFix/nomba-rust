@@ -1,13 +1,14 @@
 use crate::error::Result;
-use crate::http_client::{BlockingNombaClient, NombaClient, NombaClientConfig};
-use crate::resources::{AsyncAuth, Auth, *};
+use crate::http_client::{NombaClient, NombaClientConfig};
+use crate::resources::*;
 
-/// High-level sync client. Holds one resource handle per API group; each
-/// handle shares the same underlying HTTP connection pool and token cache.
+/// Async high-level entry point for the Nomba SDK.
 ///
-/// Note: the blocking client drives its own Tokio runtime internally, so do
-/// not construct or use it from inside async code — use [`AsyncNomba`] there
-/// instead (nesting runtimes will panic).
+/// Holds one resource handle per API group (`accounts`, `virtual_accounts`,
+/// `checkout`, …); all handles share the same HTTP connection pool and
+/// OAuth2 token cache. Every resource method is `async` and must be
+/// `.await`ed.
+#[derive(Clone)]
 pub struct Nomba {
     pub accounts: Accounts,
     pub virtual_accounts: VirtualAccounts,
@@ -27,18 +28,18 @@ pub struct Nomba {
 }
 
 impl Nomba {
-    pub fn new(
+    pub async fn new(
         client_id: impl Into<String>,
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
     ) -> Result<Self> {
         let config =
             NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into());
-        let client = BlockingNombaClient::new(config)?;
-        Self::from_client(client)
+        let client = NombaClient::new(config)?;
+        Self::from_client(client).await
     }
 
-    pub fn new_sandbox(
+    pub async fn new_sandbox(
         client_id: impl Into<String>,
         client_secret: impl Into<String>,
         account_id: impl Into<String>,
@@ -46,16 +47,16 @@ impl Nomba {
         let config =
             NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into())
                 .sandbox(true);
-        let client = BlockingNombaClient::new(config)?;
-        Self::from_client(client)
+        let client = NombaClient::new(config)?;
+        Self::from_client(client).await
     }
 
-    pub fn with_config(config: NombaClientConfig) -> Result<Self> {
-        let client = BlockingNombaClient::new(config)?;
-        Self::from_client(client)
+    pub async fn with_config(config: NombaClientConfig) -> Result<Self> {
+        let client = NombaClient::new(config)?;
+        Self::from_client(client).await
     }
 
-    fn from_client(client: BlockingNombaClient) -> Result<Self> {
+    async fn from_client(client: NombaClient) -> Result<Self> {
         let accounts = Accounts::new(client.clone());
         let virtual_accounts = VirtualAccounts::new(client.clone());
         let checkout = Checkout::new(client.clone());
@@ -96,99 +97,6 @@ impl Nomba {
         order_reference: impl Into<String>,
     ) -> crate::flows::CardPaymentFlow {
         crate::flows::CardPaymentFlow::new(self.charge.clone(), order_reference.into())
-    }
-}
-
-/// High-level async client. Same resource layout as [`Nomba`]; every method
-/// is `async` and must be `.await`ed.
-pub struct AsyncNomba {
-    pub accounts: AsyncAccounts,
-    pub virtual_accounts: AsyncVirtualAccounts,
-    pub checkout: AsyncCheckout,
-    pub charge: AsyncCharge,
-    pub transfers: AsyncTransfers,
-    pub terminals: AsyncTerminals,
-    pub transactions: AsyncTransactions,
-    pub airtime_data: AsyncAirtimeData,
-    pub cabletv: AsyncCableTv,
-    pub electricity: AsyncElectricity,
-    pub betting: AsyncBetting,
-    pub direct_debits: AsyncDirectDebits,
-    pub global_collections: AsyncGlobalCollections,
-    pub global_payout: AsyncGlobalPayout,
-    pub auth: AsyncAuth,
-}
-
-impl AsyncNomba {
-    pub async fn new(
-        client_id: impl Into<String>,
-        client_secret: impl Into<String>,
-        account_id: impl Into<String>,
-    ) -> Result<Self> {
-        let config =
-            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into());
-        let client = NombaClient::new(config)?;
-        Self::from_client(client).await
-    }
-
-    pub async fn new_sandbox(
-        client_id: impl Into<String>,
-        client_secret: impl Into<String>,
-        account_id: impl Into<String>,
-    ) -> Result<Self> {
-        let config =
-            NombaClientConfig::new(client_id.into(), client_secret.into(), account_id.into())
-                .sandbox(true);
-        let client = NombaClient::new(config)?;
-        Self::from_client(client).await
-    }
-
-    pub async fn with_config(config: NombaClientConfig) -> Result<Self> {
-        let client = NombaClient::new(config)?;
-        Self::from_client(client).await
-    }
-
-    async fn from_client(client: NombaClient) -> Result<Self> {
-        let accounts = AsyncAccounts::new(client.clone());
-        let virtual_accounts = AsyncVirtualAccounts::new(client.clone());
-        let checkout = AsyncCheckout::new(client.clone());
-        let charge = AsyncCharge::new(client.clone());
-        let transfers = AsyncTransfers::new(client.clone());
-        let terminals = AsyncTerminals::new(client.clone());
-        let transactions = AsyncTransactions::new(client.clone());
-        let airtime_data = AsyncAirtimeData::new(client.clone());
-        let cabletv = AsyncCableTv::new(client.clone());
-        let electricity = AsyncElectricity::new(client.clone());
-        let betting = AsyncBetting::new(client.clone());
-        let direct_debits = AsyncDirectDebits::new(client.clone());
-        let global_collections = AsyncGlobalCollections::new(client.clone());
-        let global_payout = AsyncGlobalPayout::new(client.clone());
-        let auth = AsyncAuth::new(client.clone());
-
-        Ok(Self {
-            accounts,
-            virtual_accounts,
-            checkout,
-            charge,
-            transfers,
-            terminals,
-            transactions,
-            airtime_data,
-            cabletv,
-            electricity,
-            betting,
-            direct_debits,
-            global_collections,
-            global_payout,
-            auth,
-        })
-    }
-
-    pub fn card_payment(
-        &self,
-        order_reference: impl Into<String>,
-    ) -> crate::flows::AsyncCardPaymentFlow {
-        crate::flows::AsyncCardPaymentFlow::new(self.charge.clone(), order_reference.into())
     }
 }
 

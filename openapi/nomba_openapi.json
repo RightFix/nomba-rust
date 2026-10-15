@@ -16914,6 +16914,169 @@
           }
         }
       }
+    },
+    "/v2/bill/electricity/lookup": {
+      "get": {
+        "description": "Returns the customer name and address. Replaces the deprecated v1 lookup.",
+        "operationId": "ELECTRICITY_CUSTOMER_LOOKUP_V2",
+        "parameters": [
+          {
+            "description": "disco",
+            "example": "phed",
+            "in": "query",
+            "name": "disco",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The parent accountId of the business.",
+            "in": "header",
+            "name": "accountId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "890022ce-bae0-45c1-9b9d-ee7872e6ca27"
+            },
+            "required": true
+          },
+          {
+            "description": "customerId",
+            "example": "12347899",
+            "in": "query",
+            "name": "customerId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "00",
+                      "description": "Response Code"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Success",
+                      "description": "Response description"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "John Doe",
+                      "description": "The name of the customer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "description",
+                    "data"
+                  ]
+                }
+              }
+            },
+            "description": "OK - your request was successful.",
+            "headers": {
+              "X-Rate-Limit-Limit": {
+                "description": "The number of allowed requests in the current period",
+                "schema": {
+                  "type": "string",
+                  "example": "40"
+                }
+              },
+              "X-Rate-Limit-Remaining": {
+                "description": "The number of remaining requests in the current period",
+                "schema": {
+                  "type": "string",
+                  "example": "39"
+                }
+              },
+              "X-Rate-Limit-Window": {
+                "description": "The specified rate limit window",
+                "schema": {
+                  "type": "string",
+                  "example": "1s"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestError"
+                }
+              }
+            },
+            "description": "The request body sent by merchant did not pass the validation checks"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            },
+            "description": "The access_token provided to access the resource is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationError"
+                }
+              }
+            },
+            "description": "The client does not have the permissions to access this resource"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordNotFoundError"
+                }
+              }
+            },
+            "description": "The record that the client is trying to access does not exist."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            },
+            "description": "The client has maxed out the number of calls within a time period on this resource."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerError"
+                }
+              }
+            },
+            "description": "Downstream system error."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Fetch customer information from an electricity provider",
+        "tags": [
+          "Electricity Vending"
+        ]
+      }
     }
   },
   "components": {
@@ -16994,8 +17157,17 @@
           },
           "status": {
             "type": "string",
-            "description": "The system status of this transction",
-            "example": "Processing"
+            "description": "The status of this transaction. `SUCCESS` means it completed; `PROCESSING` means it is still being processed \u2014 listen for the webhook or requery the transaction for the final status.",
+            "enum": [
+              "SUCCESS",
+              "PROCESSING"
+            ],
+            "example": "SUCCESS"
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the transaction, e.g. `API-TOPUP-A6950-8c060b7c-4155-4e33-a846-101b49229c33`. Use it to requery the transaction.",
+            "example": "API-TOPUP-A6950-8c060b7c-4155-4e33-a846-101b49229c33"
           }
         },
         "required": [
@@ -17063,8 +17235,18 @@
           "amount": {
             "type": "number",
             "format": "double",
-            "description": "The airtime amount to be purchased",
+            "description": "The amount charged for this data purchase.",
             "example": 200
+          },
+          "productId": {
+            "type": "string",
+            "description": "The identifier of the data plan that was vended.",
+            "example": "mtn47"
+          },
+          "plan": {
+            "type": "string",
+            "description": "A human-readable description of the exact data bundle that was vended (size and validity).",
+            "example": "3.5GB Daily Plan"
           },
           "timeCreated": {
             "type": "string",
@@ -17087,8 +17269,17 @@
           },
           "status": {
             "type": "string",
-            "description": "The system status of this transction",
-            "example": "Processing"
+            "description": "The status of this transaction. `SUCCESS` means it completed; `PROCESSING` means it is still being processed \u2014 listen for the webhook or requery the transaction for the final status.",
+            "enum": [
+              "SUCCESS",
+              "PROCESSING"
+            ],
+            "example": "SUCCESS"
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the transaction, e.g. `API-DATA-AAA1A-36dc6c70-5cf2-4592-93be-9bccc23df7f5`. Use it to requery the transaction.",
+            "example": "API-DATA-AAA1A-36dc6c70-5cf2-4592-93be-9bccc23df7f5"
           }
         },
         "required": [
@@ -17660,8 +17851,18 @@
           },
           "statusCode": {
             "type": "string",
-            "description": "transaction status code returned by the payment gateway",
+            "description": "Card processor response code. Empty on non-card rails such as mobile money, so it cannot be used to confirm a payment - use status instead",
             "example": "Payment approved"
+          },
+          "status": {
+            "type": "string",
+            "description": "Payment status of the transaction",
+            "enum": [
+              "PENDING",
+              "PAYMENT SUCCESSFUL",
+              "FAILED PAYMENT"
+            ],
+            "example": "PAYMENT SUCCESSFUL"
           }
         }
       },
@@ -18394,7 +18595,18 @@
           "name": {
             "type": "string",
             "description": "The bank's name.",
-            "example": "Guaranty Trust Bank"
+            "example": "GTBank"
+          },
+          "nipCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "The bank's NIP institution code. May be null.",
+            "example": null
+          },
+          "logo": {
+            "type": "string",
+            "description": "URL of the bank's logo image. An empty string when no logo is available.",
+            "example": "https://firebasestorage.googleapis.com/v0/b/business-banking-93cc1.appspot.com/o/bankLogos%2FGroup%209.png?alt=media&token=98bde9e8-1862-495d-9046-bd3d96465970"
           }
         }
       },
@@ -18624,9 +18836,17 @@
             "description": "Account holder's BVN. Optional.",
             "example": "12345678"
           },
+          "nin": {
+            "type": "string",
+            "description": "Account holder's National Identification Number (NIN). Optional.\n Must be exactly 11 digits. Can be sent on its own or alongside `bvn`. If neither is sent, the BVN on the parent business account is used.",
+            "minLength": 11,
+            "maxLength": 11,
+            "pattern": "^\\d{11}$",
+            "example": "12345678901"
+          },
           "expiryDate": {
             "type": "string",
-            "description": "Account expiry date. Optional. \u26a0\ufe0fBe careful with this.",
+            "description": "Account expiry date in UTC. Optional. \u26a0\ufe0fBe careful with this.",
             "example": "2026-01-30 12:15:00"
           },
           "expectedAmount": {
@@ -18635,13 +18855,10 @@
             "description": "Amount the account can receive. Optional.",
             "example": "200.00"
           },
-          "nin": {
-            "type": "string",
-            "description": "Account holder's National Identification Number (NIN). Optional. Must be exactly 11 digits. Can be sent on its own or alongside `bvn`.",
-            "minLength": 11,
-            "maxLength": 11,
-            "pattern": "^\\d{11}$",
-            "example": "12345678901"
+          "restrictInflowToAccountName": {
+            "type": "boolean",
+            "description": "When set to true, Nomba will reject any inflow to the virtual account whose sender name does not match the virtual account name. The order of names does not matter\u2014for example, a VA name of 'John Doe Naomi' would match sender names like 'Doe John Naomi' or 'Naomi Doe John', since different banks may arrange names differently. A `payment_failed` webhook event is sent to notify the merchant that the inflow was rejected. The rejected inflow is reversed back to the sender according to the sending bank's policy. Optional.",
+            "example": true
           }
         },
         "required": [
@@ -18678,6 +18895,16 @@
             "minLength": 11,
             "maxLength": 11,
             "example": "12234412345"
+          },
+          "identifierType": {
+            "type": "string",
+            "description": "The type of identifier the virtual account was created against. Omitted when the account has no identifier.",
+            "enum": [
+              "BVN",
+              "NIN",
+              "BVN_AND_NIN"
+            ],
+            "example": "BVN"
           },
           "accountName": {
             "type": "string",
@@ -18720,6 +18947,11 @@
           "expired": {
             "type": "boolean",
             "description": "Successfully updated",
+            "example": true
+          },
+          "restrictInflowToAccountName": {
+            "type": "boolean",
+            "description": "Indicates whether inflow restriction by account name is enabled. When true, the virtual account was successfully created with name restriction, meaning inflows will only be accepted if the sender's name matches the account name.",
             "example": true
           }
         },
@@ -18806,15 +19038,9 @@
             "maxLength": 64,
             "example": "Daniel Scorsese"
           },
-          "callbackUrl": {
-            "type": "string",
-            "description": "Callback url you want to update to",
-            "format": "url",
-            "example": "https://webhook.site/98ef100f-5adc-4434-800a-0808h60bd8d7"
-          },
           "expectedAmount": {
             "type": "string",
-            "description": "If passed, the virtual account will only accept payments for this amount. Be careful as once being set this Virtual account can never take any amount again, thou you can always update the expected amount",
+            "description": "If provided, the virtual account will only accept payments that exactly match the specified amount.\n\nOnce expectedAmount is set, the virtual account will no longer accept arbitrary payment amounts.\nYou can, however, update the expectedAmount value at any time to change the accepted amount.",
             "example": "100.0"
           }
         }
@@ -20132,29 +20358,17 @@
         ]
       },
       "DataPlanList": {
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "plan": {
-            "type": "string",
-            "example": "40GB -> 30Days (N15,000)"
-          }
+        "type": "array",
+        "description": "List of available data plans for the telco",
+        "items": {
+          "$ref": "#/components/schemas/DataPlan"
         }
       },
       "DiscoList": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "jed"
-          },
-          "name": {
-            "type": "string",
-            "example": "Jos Electric (JEDC)"
-          }
+        "type": "array",
+        "description": "List of all electricity providers/discos",
+        "items": {
+          "$ref": "#/components/schemas/Disco"
         }
       },
       "BettingProvider": {
@@ -21030,6 +21244,592 @@
           "success",
           "message"
         ]
+      },
+      "AirtimePurchaseData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the airtime transaction",
+            "example": "API-TOPUP-A6950-8c060b7c-4155-4e33-a846-101b49229c33"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the transaction. `SUCCESS` (HTTP 200) means the purchase completed; `PENDING_BILLING` (HTTP 201) means it is still being processed.\n\nIn addition, any undocumented `data.status` should be treated as `PENDING_BILLING`; listen for the webhook or requery the transaction for its final status.",
+            "example": "SUCCESS"
+          },
+          "type": {
+            "type": "string",
+            "description": "Transaction type",
+            "example": "topup"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Airtime amount purchased",
+            "example": 100
+          },
+          "source": {
+            "type": "string",
+            "description": "Channel through which the transaction was initiated",
+            "example": "api"
+          },
+          "sourceUserId": {
+            "type": "string",
+            "description": "Identifier of the source user, if any",
+            "nullable": true
+          },
+          "customerBillerId": {
+            "type": "string",
+            "description": "Phone number credited with the airtime",
+            "example": "08123456788"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Product identifier for the airtime purchase",
+            "example": "62130"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional transaction metadata",
+            "additionalProperties": true,
+            "example": {
+              "api_rrn": "260926204701",
+              "rrn": "260926204701",
+              "api_account_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "api_client_id": "2167288-d989-460a-bbde-9842f2b4320f",
+              "user_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "merchantTxRef": "REF-29-07-2026-12",
+              "allowDuplicate": true,
+              "sender_name": "John Doe",
+              "idempotentKey": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-12",
+              "pos_withdrawal_id": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-12",
+              "userName": "John Doe",
+              "isCorporate": "true",
+              "currency": "NGN",
+              "hooksEligible": "true",
+              "isSubscribedToSavingsService": false,
+              "isSubscribedToLoanService": false,
+              "txnAlertEligible": true,
+              "banking_entity_id": 189585760,
+              "banking_entity_user_id": 188595905,
+              "banking_entity_type": "CORPORATE",
+              "transactionCategory": "Bills & Utility",
+              "network": "mtn",
+              "subscriberNumber": "08123456788",
+              "amount_charged": "100.0",
+              "wallet_balance": "610.55",
+              "wallet_currency": "NGN",
+              "agent_commission": "2.0",
+              "gatewayMessage": "Success",
+              "billingServiceTransactionId": "6ab821352669ea6eac2bb2ba",
+              "billingServiceResponse": "SUCCESS",
+              "income": "0.5",
+              "paymentFee": 0,
+              "tx_revenue": "2.5",
+              "phoneNumber": "08123456788"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the user, if any",
+            "nullable": true
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "Time the transaction was created",
+            "format": "date-time",
+            "example": "2026-09-26T19:47:01.514+00:00"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "amount",
+          "timeCreated"
+        ]
+      },
+      "DataVendingData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the data transaction",
+            "example": "API-DATA-AAA1A-36dc6c70-5cf2-4592-93be-9bccc23df7f5"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the transaction. `SUCCESS` (HTTP 200) means the purchase completed; `PENDING_BILLING` (HTTP 201) means it is still being processed.\n\nIn addition, any undocumented `data.status` should be treated as `PENDING_BILLING`; listen for the webhook or requery the transaction for its final status.",
+            "example": "SUCCESS"
+          },
+          "type": {
+            "type": "string",
+            "description": "Transaction type",
+            "example": "data"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount paid for the data bundle",
+            "example": 100
+          },
+          "source": {
+            "type": "string",
+            "description": "Channel through which the transaction was initiated",
+            "example": "api"
+          },
+          "sourceUserId": {
+            "type": "string",
+            "description": "Identifier of the source user, if any",
+            "nullable": true
+          },
+          "customerBillerId": {
+            "type": "string",
+            "description": "Phone number credited with the data bundle",
+            "example": "08168969046"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Identifier of the data plan purchased",
+            "example": "62130"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional transaction metadata, including the data plan purchased (`data-plan`) and network",
+            "additionalProperties": true,
+            "example": {
+              "api_rrn": "260927093143",
+              "data-plan": "110MB Daily Plan",
+              "rrn": "260927093143",
+              "api_account_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "api_client_id": "2167288-d989-460a-bbde-9842f2b4320f",
+              "user_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "merchantTxRef": "REF-29-07-2026-13",
+              "allowDuplicate": true,
+              "sender_name": "John Doe",
+              "idempotentKey": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-13",
+              "pos_withdrawal_id": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-13",
+              "userName": "John Doe",
+              "isCorporate": "true",
+              "currency": "NGN",
+              "hooksEligible": "true",
+              "isSubscribedToSavingsService": false,
+              "isSubscribedToLoanService": false,
+              "txnAlertEligible": false,
+              "banking_entity_id": 189585760,
+              "banking_entity_user_id": 188595905,
+              "banking_entity_type": "CORPORATE",
+              "self_transaction": true,
+              "transactionCategory": "Bills & Utility",
+              "network": "mtn",
+              "subscriberNumber": "08123456788",
+              "amount_charged": "100.0",
+              "paymentVendor": "wallet",
+              "wallet_balance": "2955.85",
+              "wallet_currency": "NGN",
+              "agent_commission": "0.0",
+              "gatewayMessage": "Success",
+              "billingVendor": "cowrie",
+              "billingServiceResponse": "SUCCESS",
+              "income": "2.5",
+              "paymentFee": 0,
+              "tx_revenue": "2.5",
+              "phoneNumber": "08123456788"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the user, if any",
+            "nullable": true
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "Time the transaction was created",
+            "format": "date-time",
+            "example": "2026-09-27T08:31:43.555+00:00"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "amount",
+          "timeCreated"
+        ]
+      },
+      "ElectricityVendingData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the electricity transaction",
+            "example": "API-PHCN-28958-37da63af-8daa-4cb7-9070-e32920e38c12"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the transaction. `SUCCESS` (HTTP 200) means the purchase completed; `PENDING_BILLING` (HTTP 201) means it is still being processed.\n\nIn addition, any undocumented `data.status` should be treated as `PENDING_BILLING`; listen for the webhook or requery the transaction for its final status.",
+            "example": "SUCCESS"
+          },
+          "type": {
+            "type": "string",
+            "description": "Transaction type",
+            "example": "phcn"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount paid for electricity",
+            "example": 1000
+          },
+          "source": {
+            "type": "string",
+            "description": "Channel through which the transaction was initiated",
+            "example": "api"
+          },
+          "sourceUserId": {
+            "type": "string",
+            "description": "Identifier of the source user, if any",
+            "nullable": true
+          },
+          "customerBillerId": {
+            "type": "string",
+            "description": "Meter number credited with the payment",
+            "example": "12345678902"
+          },
+          "productId": {
+            "type": "string",
+            "description": "The electricity distribution company (disco)",
+            "example": "benin"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional transaction metadata, including the electricity token (`phcnToken`) and units purchased",
+            "additionalProperties": true,
+            "example": {
+              "payment_type": "prepaid",
+              "api_rrn": null,
+              "biller_account_name": "John Doe",
+              "rrn": null,
+              "api_account_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "api_client_id": "05cc8ef7-3aa6-408a-9cde-1a91fd20f592",
+              "user_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "merchantTxRef": "310120260017AM",
+              "allowDuplicate": true,
+              "sender_name": "Josh Doe",
+              "idempotentKey": "0167288-d989-460a-bbde-9842f2b4320f_310120260017AM",
+              "pos_withdrawal_id": "0167288-d989-460a-bbde-9842f2b4320f_310120260017AM",
+              "userName": "John Doe",
+              "isCorporate": "true",
+              "currency": "NGN",
+              "hooksEligible": "true",
+              "isSubscribedToSavingsService": false,
+              "isSubscribedToLoanService": false,
+              "txnAlertEligible": false,
+              "banking_entity_id": 189585760,
+              "banking_entity_user_id": 188595905,
+              "banking_entity_type": "CORPORATE",
+              "transactionCategory": "Bills & Utility",
+              "meterNumber": "12345678901",
+              "amount_charged": "1000.0",
+              "paymentVendor": "wallet",
+              "wallet_balance": "3055.85",
+              "wallet_currency": "NGN",
+              "paymentVendorReference": "6ab8d20521deef068755e6a2",
+              "gatewayMessage": "Token: 43557934939308375700",
+              "billingServiceResponse": "Token: 43557934939308375700",
+              "phcnToken": "43557934939308375700",
+              "phcnCustomerName": "Mr Johnson",
+              "phcnCustomerAddress": "29 Okabiri Street ",
+              "phcnCustomerPhone": "09012345678",
+              "phcnVendToken": "14557934939308375701",
+              "phcnVendUnits": "16.4",
+              "meterDebt": "unknown",
+              "units": "16.4",
+              "income": "21.0",
+              "paymentFee": 0,
+              "tx_revenue": "21.0"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the user, if any",
+            "nullable": true
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "Time the transaction was created",
+            "format": "date-time",
+            "example": "2026-09-27T08:21:25.582+00:00"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "amount",
+          "timeCreated"
+        ]
+      },
+      "BettingVendingData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the betting transaction",
+            "example": "API-BETTING-4B8C8-7e3a91c2-58d4-4f0b-b6a2-c9d18e5f3a47"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the transaction. `SUCCESS` (HTTP 200) means the purchase completed; `PENDING_BILLING` (HTTP 201) means it is still being processed.\n\nIn addition, any undocumented `data.status` should be treated as `PENDING_BILLING`; listen for the webhook or requery the transaction for its final status.",
+            "example": "SUCCESS"
+          },
+          "type": {
+            "type": "string",
+            "description": "Transaction type",
+            "example": "betting"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount funded into the betting account",
+            "example": 2000
+          },
+          "source": {
+            "type": "string",
+            "description": "Channel through which the transaction was initiated",
+            "example": "api"
+          },
+          "sourceUserId": {
+            "type": "string",
+            "description": "Identifier of the source user, if any",
+            "nullable": true
+          },
+          "customerBillerId": {
+            "type": "string",
+            "description": "Customer ID on the betting platform credited with the payment",
+            "example": "1234567890"
+          },
+          "productId": {
+            "type": "string",
+            "description": "The betting provider",
+            "example": "bet9ja"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional transaction metadata",
+            "additionalProperties": true,
+            "example": {
+              "api_rrn": "260927113024",
+              "rrn": "260927113024",
+              "api_account_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "api_client_id": "2167288-d989-460a-bbde-9842f2b4320f",
+              "user_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "merchantTxRef": "REF-29-07-2026-15",
+              "allowDuplicate": true,
+              "sender_name": "John Doe",
+              "idempotentKey": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-15",
+              "pos_withdrawal_id": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-15",
+              "userName": "John Doe",
+              "isCorporate": "true",
+              "currency": "NGN",
+              "hooksEligible": "true",
+              "isSubscribedToSavingsService": false,
+              "isSubscribedToLoanService": false,
+              "txnAlertEligible": false,
+              "banking_entity_id": 189585760,
+              "banking_entity_user_id": 188595905,
+              "banking_entity_type": "CORPORATE",
+              "transactionCategory": "Bills & Utility",
+              "bettingProvider": "bet9ja",
+              "customerId": "1234567890",
+              "phoneNumber": "09012345678",
+              "amount_charged": "2000.0",
+              "paymentVendor": "wallet",
+              "wallet_balance": "955.85",
+              "wallet_currency": "NGN",
+              "gatewayMessage": "Success",
+              "billingServiceResponse": "SUCCESS"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the user, if any",
+            "nullable": true
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "Time the transaction was created",
+            "format": "date-time",
+            "example": "2026-09-27T10:30:24.207+00:00"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "amount",
+          "timeCreated"
+        ]
+      },
+      "CableTvSubscriptionData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the cable TV transaction",
+            "example": "API-DSTV-C1073-5b2e8f4a-3c71-4d9e-8a60-2f1b7c9d4e13"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the transaction. `SUCCESS` (HTTP 200) means the purchase completed; `PENDING_BILLING` (HTTP 201) means it is still being processed.\n\nIn addition, any undocumented `data.status` should be treated as `PENDING_BILLING`; listen for the webhook or requery the transaction for its final status.",
+            "example": "SUCCESS"
+          },
+          "type": {
+            "type": "string",
+            "description": "Transaction type. This is the cable TV provider, e.g. `dstv` or `gotv`",
+            "example": "dstv"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount paid for the subscription",
+            "example": 2000
+          },
+          "source": {
+            "type": "string",
+            "description": "Channel through which the transaction was initiated",
+            "example": "api"
+          },
+          "sourceUserId": {
+            "type": "string",
+            "description": "Identifier of the source user, if any",
+            "nullable": true
+          },
+          "customerBillerId": {
+            "type": "string",
+            "description": "Smartcard or IUC number credited with the subscription",
+            "example": "1234567890"
+          },
+          "productId": {
+            "type": "string",
+            "description": "The cable TV provider",
+            "example": "dstv"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional transaction metadata",
+            "additionalProperties": true,
+            "example": {
+              "api_rrn": "260927101512",
+              "rrn": "260927101512",
+              "api_account_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "api_client_id": "2167288-d989-460a-bbde-9842f2b4320f",
+              "user_id": "0167288-d989-460a-bbde-9842f2b4320f",
+              "merchantTxRef": "REF-29-07-2026-14",
+              "allowDuplicate": true,
+              "sender_name": "John Doe",
+              "idempotentKey": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-14",
+              "pos_withdrawal_id": "0167288-d989-460a-bbde-9842f2b4320f_REF-29-07-2026-14",
+              "userName": "John Doe",
+              "isCorporate": "true",
+              "currency": "NGN",
+              "hooksEligible": "true",
+              "isSubscribedToSavingsService": false,
+              "isSubscribedToLoanService": false,
+              "txnAlertEligible": false,
+              "banking_entity_id": 189585760,
+              "banking_entity_user_id": 188595905,
+              "banking_entity_type": "CORPORATE",
+              "transactionCategory": "Bills & Utility",
+              "cableTvType": "dstv",
+              "customerId": "1234567890",
+              "amount_charged": "2000.0",
+              "paymentVendor": "wallet",
+              "wallet_balance": "955.85",
+              "wallet_currency": "NGN",
+              "gatewayMessage": "Success",
+              "billingServiceResponse": "SUCCESS"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the user, if any",
+            "nullable": true
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "Time the transaction was created",
+            "format": "date-time",
+            "example": "2026-09-27T09:15:12.418+00:00"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "amount",
+          "timeCreated"
+        ]
+      },
+      "DataPlan": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "example": "1GB + 1.5mins 1 day Plan"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 500
+          },
+          "productId": {
+            "type": "string",
+            "description": "The unique identifier for this data plan. Pass this value as `productId` when purchasing to select this exact bundle.",
+            "example": "mtn16"
+          }
+        }
+      },
+      "Disco": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "jed"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jos Electric (JEDC)"
+          }
+        }
+      },
+      "CableTvPlan": {
+        "type": "object",
+        "properties": {
+          "subScriptionType": {
+            "type": "string",
+            "description": "The subscription plan type (e.g., COMPACT, PREMIUM, YANGA)",
+            "example": "COMPACT"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "The amount for the subscription plan",
+            "example": 19000
+          }
+        },
+        "required": [
+          "subScriptionType",
+          "amount"
+        ]
+      },
+      "CableTvPlanList": {
+        "type": "array",
+        "description": "List of available cable TV subscription plans",
+        "items": {
+          "$ref": "#/components/schemas/CableTvPlan"
+        }
       }
     },
     "securitySchemes": {

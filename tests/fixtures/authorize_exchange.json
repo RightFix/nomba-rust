@@ -1,0 +1,13 @@
+{
+  "code": "00",
+  "description": "Successful",
+  "data": {
+    "wtTransactionId": "01kkk8cjk0fpw9jx2n01wd8yfw",
+    "coreTransactionId": "API-P2P-CB9EC-0c2d962e-4730-48e7-b522-d65cac511549",
+    "status": "PROCESSING",
+    "coreStatus": "SUCCESS",
+    "type": "EXCHANGE",
+    "idempotencyKey": "",
+    "idempotentReplay": false
+  }
+}

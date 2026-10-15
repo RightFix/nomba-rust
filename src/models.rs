@@ -179,6 +179,9 @@ pub struct VirtualAccountData {
     /// accounts) — optional for that reason, not because callers omit it.
     #[serde(rename = "callbackUrl", default)]
     pub callback_url: Option<String>,
+    /// Restrict inflows to the account name when set at creation.
+    #[serde(rename = "restrictInflowToAccountName", default)]
+    pub restrict_inflow_to_account_name: Option<String>,
     pub expired: bool,
 }
 
@@ -390,17 +393,39 @@ pub struct DeleteTokenizedCardResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BankData {
+    #[serde(default)]
+    pub code: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(rename = "nipCode", default)]
+    pub nip_code: Option<String>,
+    #[serde(default)]
+    pub logo: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchBankCodesResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: Vec<BankData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BankAccountLookupData {
+    #[serde(rename = "accountNumber", default)]
+    pub account_number: Option<String>,
+    #[serde(rename = "accountName", default)]
+    pub account_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BankAccountLookupResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: BankAccountLookupData,
 }
 
 /// Transfers models
@@ -486,11 +511,37 @@ pub struct ConvertMoneyResponse {
     pub data: ConvertMoneyData,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ExchangeRateData {
+    #[serde(rename = "exchangeRateId", default)]
+    pub exchange_rate_id: Option<String>,
+    #[serde(rename = "currencyPairName", default)]
+    pub currency_pair_name: Option<String>,
+    #[serde(rename = "bidRate", default)]
+    pub bid_rate: Option<String>,
+    #[serde(rename = "askRate", default)]
+    pub ask_rate: Option<String>,
+    #[serde(rename = "midRate", default)]
+    pub mid_rate: Option<String>,
+    #[serde(rename = "createdAt", default)]
+    pub created_at: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ExchangeRatesData {
+    #[serde(default)]
+    pub rates: Vec<ExchangeRateData>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchExchangeRatesResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: ExchangeRatesData,
 }
 
 /// Terminals models
@@ -582,6 +633,18 @@ pub struct AirtimePurchaseData {
     pub transaction_type: String,
     pub meta: HashMap<String, serde_json::Value>,
     pub status: String,
+    #[serde(default)]
+    pub id: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(rename = "sourceUserId", default)]
+    pub source_user_id: Option<String>,
+    #[serde(rename = "customerBillerId", default)]
+    pub customer_biller_id: Option<String>,
+    #[serde(rename = "productId", default)]
+    pub product_id: Option<String>,
+    #[serde(rename = "userId", default)]
+    pub user_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -625,12 +688,45 @@ pub struct FetchDataPlansResponse {
     pub data: PlanListData,
 }
 
+/// A single data plan as returned by the fetch-data-plans endpoint.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DataPlan {
+    #[serde(default)]
+    pub plan: Option<String>,
+    #[serde(default)]
+    pub amount: Option<serde_json::Value>,
+    #[serde(rename = "productId", default)]
+    pub product_id: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
 /// CableTV models
+/// Customer name lookup result. Nomba returns the customer name as a plain
+/// string on these endpoints; the map variant is accepted for tolerance.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CustomerLookupData {
+    Name(String),
+    Details(HashMap<String, serde_json::Value>),
+}
+
+impl CustomerLookupData {
+    /// Borrow the customer name, whether it arrived as a plain string or
+    /// inside a `name` field.
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            CustomerLookupData::Name(s) => Some(s),
+            CustomerLookupData::Details(m) => m.get("name").and_then(|v| v.as_str()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CableTvLookupResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: CustomerLookupData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -643,7 +739,19 @@ pub struct CableTvSubscriptionData {
     pub meta: HashMap<String, serde_json::Value>,
     pub status: String,
     pub id: String,
-    pub fee: String,
+    /// Present on v1 responses; absent on v2 responses.
+    #[serde(default)]
+    pub fee: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(rename = "customerBillerId", default)]
+    pub customer_biller_id: Option<String>,
+    #[serde(rename = "productId", default)]
+    pub product_id: Option<String>,
+    #[serde(rename = "sourceUserId", default)]
+    pub source_user_id: Option<String>,
+    #[serde(rename = "userId", default)]
+    pub user_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -667,11 +775,19 @@ pub struct FetchElectricityProvidersResponse {
     pub data: Vec<ElectricityProviderData>,
 }
 
+/// Electricity customer details (v2 lookup also returns the address).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ElectricityCustomerData {
+    pub name: String,
+    #[serde(default)]
+    pub address: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElectricityCustomerLookupResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: ElectricityCustomerData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -684,7 +800,19 @@ pub struct VendElectricityData {
     pub meta: HashMap<String, serde_json::Value>,
     pub status: String,
     pub id: String,
-    pub fee: String,
+    /// Present on v1 responses; absent on v2 responses.
+    #[serde(default)]
+    pub fee: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(rename = "customerBillerId", default)]
+    pub customer_biller_id: Option<String>,
+    #[serde(rename = "productId", default)]
+    pub product_id: Option<String>,
+    #[serde(rename = "sourceUserId", default)]
+    pub source_user_id: Option<String>,
+    #[serde(rename = "userId", default)]
+    pub user_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -706,7 +834,7 @@ pub struct FetchBettingProvidersResponse {
 pub struct BettingCustomerLookupResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: CustomerLookupData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -719,7 +847,19 @@ pub struct VendBettingData {
     pub meta: HashMap<String, serde_json::Value>,
     pub status: String,
     pub id: String,
-    pub fee: String,
+    /// Present on v1 responses; absent on v2 responses.
+    #[serde(default)]
+    pub fee: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(rename = "customerBillerId", default)]
+    pub customer_biller_id: Option<String>,
+    #[serde(rename = "productId", default)]
+    pub product_id: Option<String>,
+    #[serde(rename = "sourceUserId", default)]
+    pub source_user_id: Option<String>,
+    #[serde(rename = "userId", default)]
+    pub user_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -863,6 +1003,12 @@ pub struct FetchCollectionTransactionData {
     pub status: String,
     pub amount: f64,
     pub currency: String,
+    #[serde(default)]
+    pub vendor: Option<String>,
+    #[serde(rename = "gatewayMessage", default)]
+    pub gateway_message: Option<String>,
+    #[serde(rename = "gatewayCode", default)]
+    pub gateway_code: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -873,10 +1019,18 @@ pub struct FetchCollectionTransactionResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InflowProviderData {
+    #[serde(default)]
+    pub code: Option<String>,
+    #[serde(rename = "displayName", default)]
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchDrcInflowProvidersResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: Vec<InflowProviderData>,
 }
 
 /// Global Payout models
@@ -1038,6 +1192,12 @@ pub struct AuthorizeTransferData {
     pub transaction_type: String,
     #[serde(rename = "prettyStatus")]
     pub pretty_status: String,
+    /// Echo of the request's idempotency key, if one was sent.
+    #[serde(rename = "idempotencyKey", default)]
+    pub idempotency_key: Option<String>,
+    /// True when this response replays an earlier request with the same key.
+    #[serde(rename = "idempotentReplay", default)]
+    pub idempotent_replay: Option<bool>,
     pub meta: AuthorizeTransferMeta,
 }
 
@@ -1059,6 +1219,12 @@ pub struct AuthorizeExchangeData {
     pub core_status: String,
     #[serde(rename = "type")]
     pub transaction_type: String,
+    /// Echo of the request's idempotency key, if one was sent.
+    #[serde(rename = "idempotencyKey", default)]
+    pub idempotency_key: Option<String>,
+    /// True when this response replays an earlier request with the same key.
+    #[serde(rename = "idempotentReplay", default)]
+    pub idempotent_replay: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1115,8 +1281,10 @@ mod plan_shape_tests {
     use super::*;
 
     const DATA_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","message":"SUCCESS","status":true,"data":[{"plan":"110MB Daily Plan","amount":100,"productId":"mtn1"}]}"#;
-    const DATA_MAP: &str = r#"{"code":"00","description":"ok","data":{"mtn1":{"plan":"110MB","amount":100}}}"#;
-    const BETTING_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","data":[{"id":"bet9ja","name":"BET9JA"}]}"#;
+    const DATA_MAP: &str =
+        r#"{"code":"00","description":"ok","data":{"mtn1":{"plan":"110MB","amount":100}}}"#;
+    const BETTING_ARRAY: &str =
+        r#"{"code":"00","description":"SUCCESS","data":[{"id":"bet9ja","name":"BET9JA"}]}"#;
     const DISCOS_ARRAY: &str = r#"{"code":"00","description":"SUCCESS","data":[{"id":"phed","name":"Port Harcourt (PHED)"}]}"#;
 
     #[test]

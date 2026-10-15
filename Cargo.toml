@@ -1,6 +1,6 @@
 [package]
 name = "nomba-rs"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Righteousness Ude"]
@@ -14,14 +14,12 @@ keywords = ["nomba", "payments", "nigeria", "fintech", "sdk"]
 categories = ["api-bindings", "web-programming", "finance"]
 
 [features]
-default = ["blocking", "async"]
-blocking = ["reqwest/blocking"]
-async = ["reqwest"]
+default = []
 validation = ["openapiv3"]
 
 [dependencies]
-# HTTP client
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], optional = true }
+# HTTP client (async-only)
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
 
 # Serialization

@@ -1,0 +1,35 @@
+{
+  "code": "00",
+  "description": "Successful",
+  "data": {
+    "wtTransactionId": "01kky197w3xc6wyjenpc5r0tnp",
+    "coreTransactionId": "API-FX_TX_DR-08A1B-6add611a-e538-4e67-b522-d65cac511549",
+    "status": "PROCESSING",
+    "coreStatus": "PAYMENT_SUCCESSFUL",
+    "type": "TRANSFER",
+    "idempotencyKey": "5e246f9a-3e79-4b11-92f1-dbd98b53b308",
+    "idempotentReplay": false,
+    "prettyStatus": "Successful",
+    "meta": {
+      "source_amount": "250.0",
+      "destination_amount": "250.0",
+      "source_currency": "USD",
+      "destination_currency": "USD",
+      "amount_charged": "255.0",
+      "currency_pair_name": "USD/USD",
+      "payment_method": "MobileMoney",
+      "destination_country": "CD",
+      "destination_country_name": "Congo DR",
+      "source_country": "CD",
+      "narration": "Family support",
+      "trade_side": "BUY",
+      "spread_amount": "0.0",
+      "spread_currency": "USD",
+      "wt_transaction_id": "01kky197w3xc6wyjenpc5r0tnp",
+      "trade_context": "default",
+      "transactionCategory": "General",
+      "payment_destination_type": "Account",
+      "tradeType": "FIXED_TRADE"
+    }
+  }
+}

@@ -1,21 +1,22 @@
 # nomba-rs
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
+[![crates.io](https://img.shields.io/crates/v/nomba-rs.svg)](https://crates.io/crates/nomba-rs)
 
-Unofficial Rust SDK for the [Nomba](https://developer.nomba.com) payments API.
+Unofficial async Rust SDK for the [Nomba](https://developer.nomba.com) payments API.
 Full documentation (guides + API reference): <https://RightFix.github.io/nomba-docs-rust/>
 
 ## Features
 
-- **Sync & Async clients** - Both blocking and async/await APIs
-- **Complete API coverage** - All Nomba endpoints (Accounts, Virtual Accounts, Checkout, Transfers, Terminals, Transactions, Airtime/Data, CableTV, Electricity, Betting, Direct Debits, Global Collections, Global Payout)
+- **Async client** - Tokio-based `async`/`await` API covering every endpoint group
+- **Complete API coverage** - Accounts, Virtual Accounts, Checkout, Charge, Transfers, Terminals, Transactions, Airtime/Data, CableTV, Electricity, Betting, Direct Debits, Global Collections, Global Payout, Auth
 - **OAuth2 authentication** - Automatic token management with refresh
 - **Retry logic** - Automatic retry with exponential backoff for 429/5xx errors
 - **Webhook verification** - HMAC-SHA256 signature verification with replay protection
 - **Card payment flows** - Guided multi-step card payment (OTP, 3DS)
-- **Pagination helpers** - Cursor-based pagination iterators
+- **Pagination helpers** - Cursor-based pagination as a `Stream`
 - **Bounded concurrency** - Rate-limited concurrent request execution
-- **Request validation** - Optional local validation against OpenAPI spec
+- **Request validation** - Optional local validation against the bundled OpenAPI spec
 
 ## Installation
 
@@ -23,7 +24,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nomba-rs = "0.2"
+nomba-rs = "0.5"
+tokio = { version = "1", features = ["full"] }
 ```
 
 Or for local development:
@@ -34,61 +36,32 @@ nomba-rs = { path = "../nomba-rust" }
 
 ### Features
 
-- `blocking` (default) - Enable sync/blocking client
-- `async` (default) - Enable async client (requires tokio)
-- `validation` - Enable local request validation against OpenAPI spec
+- `validation` - Enable local request validation against the bundled OpenAPI spec
 
 ```toml
-nomba-rs = { version = "0.2", features = ["async", "validation"] }
+nomba-rs = { version = "0.5", features = ["validation"] }
 ```
 
 ## Quick Start
 
-### Sync Client
-
 ```rust
-use nomba_rs::{Nomba, NombaClientConfig};
+use nomba_rs::Nomba;
 
-fn main() -> nomba_rs::Result<()> {
+#[tokio::main]
+async fn main() -> nomba_rs::Result<()> {
     let nomba = Nomba::new(
         "your_client_id",
         "your_client_secret",
         "your_account_id",
-    )?;
+    ).await?;
 
-    // Create a virtual account
+    // Create a virtual account (pass a BVN and/or NIN to create against it)
     let account = nomba.virtual_accounts.create_virtual_account(
         "ref-123",
         "Jane Doe",
-        None, None, None, None
-    )?;
-    
-    println!("Created account: {:?}", account.data.account_ref);
-    Ok(())
-}
-```
-
-### Async Client
-
-```rust
-use nomba_rs::AsyncNomba;
-
-#[tokio::main]
-async fn main() -> nomba_rs::Result<()> {
-    let nomba = AsyncNomba::new(
-        "your_client_id",
-        "your_client_secret",
-        "your_account_id",
+        None, None, None, None, None
     ).await?;
 
-    // Create a virtual account
-    // Pass a NIN (or BVN) to create the account against it:
-    let account = nomba.virtual_accounts.create_virtual_account(
-        "ref-123",
-        "Jane Doe",
-        None, Some("12345678901".to_string()), None, None
-    ).await?;
-    
     println!("Created account: {:?}", account.data.account_ref);
     Ok(())
 }
@@ -101,7 +74,7 @@ let nomba = Nomba::new_sandbox(
     "your_client_id",
     "your_client_secret",
     "your_account_id",
-)?;
+).await?;
 ```
 
 ### Configuration
@@ -120,41 +93,45 @@ let config = NombaClientConfig::new(
 .max_retries(5)
 .backoff_factor(1.0);
 
-let nomba = Nomba::with_config(config)?;
+let nomba = Nomba::with_config(config).await?;
 ```
 
 ## Resource Modules
 
 Each API group is exposed as a resource on the client:
 
-| Resource | Sync | Async |
-|----------|------|-------|
-| Accounts | `nomba.accounts` | `nomba.accounts` |
-| Virtual Accounts | `nomba.virtual_accounts` | `nomba.virtual_accounts` |
-| Checkout | `nomba.checkout` | `nomba.checkout` |
-| Charge | `nomba.charge` | `nomba.charge` |
-| Transfers | `nomba.transfers` | `nomba.transfers` |
-| Terminals | `nomba.terminals` | `nomba.terminals` |
-| Transactions | `nomba.transactions` | `nomba.transactions` |
-| Airtime & Data | `nomba.airtime_data` | `nomba.airtime_data` |
-| CableTV | `nomba.cabletv` | `nomba.cabletv` |
-| Electricity | `nomba.electricity` | `nomba.electricity` |
-| Betting | `nomba.betting` | `nomba.betting` |
-| Direct Debits | `nomba.direct_debits` | `nomba.direct_debits` |
-| Global Collections | `nomba.global_collections` | `nomba.global_collections` |
-| Global Payout | `nomba.global_payout` | `nomba.global_payout` |
-| Auth | `nomba.auth` | `nomba.auth` |
+| Resource | Field |
+|----------|-------|
+| Accounts | `nomba.accounts` |
+| Virtual Accounts | `nomba.virtual_accounts` |
+| Checkout | `nomba.checkout` |
+| Charge | `nomba.charge` |
+| Transfers | `nomba.transfers` |
+| Terminals | `nomba.terminals` |
+| Transactions | `nomba.transactions` |
+| Airtime & Data | `nomba.airtime_data` |
+| CableTV | `nomba.cabletv` |
+| Electricity | `nomba.electricity` |
+| Betting | `nomba.betting` |
+| Direct Debits | `nomba.direct_debits` |
+| Global Collections | `nomba.global_collections` |
+| Global Payout | `nomba.global_payout` |
+| Auth | `nomba.auth` |
 
-## Auth - Revoke Access Token
+## Auth - Token Management
 
 ```rust
 use nomba_rs::Nomba;
 
-let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
+let nomba = Nomba::new("client_id", "client_secret", "account_id").await?;
 
 // Revoke an access token (e.g., on logout)
-let revoked = nomba.auth.revoke_access_token("access_token_to_revoke")?;
+let revoked = nomba.auth.revoke_access_token("access_token_to_revoke").await?;
 println!("Token revoked: {}", revoked.description);
+
+// Refresh an expired access token
+let refreshed = nomba.auth.refresh_access_token("refresh_token").await?;
+println!("New token: {}", refreshed.data.access_token);
 ```
 
 ## Global Payout
@@ -162,16 +139,16 @@ println!("Token revoked: {}", revoked.description);
 ```rust
 use nomba_rs::Nomba;
 
-let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
+let nomba = Nomba::new("client_id", "client_secret", "account_id").await?;
 
 // Fetch all currency wallets
-let accounts = nomba.global_payout.fetch_accounts()?;
+let accounts = nomba.global_payout.fetch_accounts().await?;
 for wallet in accounts.data {
     println!("Wallet: {} ({}) - Balance: {:?}", wallet.name, wallet.currency, wallet.balance);
 }
 
 // Fetch a specific wallet by accountId (not currency code!)
-let wallet = nomba.global_payout.fetch_account("66bc8c0e054dfe06b69a840a")?;
+let wallet = nomba.global_payout.fetch_account("66bc8c0e054dfe06b69a840a").await?;
 println!("Wallet: {} - Available: {:?}", wallet.data.name, wallet.data.available_balance);
 
 // Authorize a cross-border transfer (e.g., MobileMoney to DRC)
@@ -196,7 +173,8 @@ let transfer = nomba.global_payout.authorize_transfer(
     None,                           // bank_state
     None,                           // bank_zip_code
     None,                           // beneficiary
-)?;
+    Some("5e246f9a-3e79-4b11-92f1-dbd98b53b308"), // idempotency_key
+).await?;
 println!("Transfer: {}", transfer.data.wt_transaction_id);
 
 // Authorize an exchange between your own wallets
@@ -210,7 +188,8 @@ let exchange = nomba.global_payout.authorize_exchange(
     "CD",                           // destination_country_iso_code
     Some("Salary conversion"),      // narration
     None,                           // locked_exchange_rate_id
-)?;
+    None,                           // idempotency_key
+).await?;
 println!("Exchange: {}", exchange.data.wt_transaction_id);
 ```
 
@@ -219,12 +198,12 @@ println!("Exchange: {}", exchange.data.wt_transaction_id);
 ```rust
 use nomba_rs::Nomba;
 
-let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
+let nomba = Nomba::new("client_id", "client_secret", "account_id").await?;
 
 // Get available DStv plans
-let plans = nomba.cabletv.fetch_plans("dstv")?;
+let plans = nomba.cabletv.fetch_plans("dstv").await?;
 for plan in plans.data {
-    println!("Plan: {} - ₦{}", plan.subscription_type, plan.amount);
+    println!("Plan: {} - {:?}", plan.subscription_type, plan.amount);
 }
 
 // Also supports: gotv, startimes, ShowMax
@@ -235,10 +214,10 @@ for plan in plans.data {
 ```rust
 use nomba_rs::Nomba;
 
-let nomba = Nomba::new("client_id", "client_secret", "account_id")?;
+let nomba = Nomba::new("client_id", "client_secret", "account_id").await?;
 
 // 1. Fetch data plans to get product IDs
-let plans = nomba.airtime_data.fetch_data_plans("MTN")?;
+let plans = nomba.airtime_data.fetch_data_plans("MTN").await?;
 
 // 2. Vend data using product_id (not amount!)
 let vend = nomba.airtime_data.vend_data_parent(
@@ -247,7 +226,7 @@ let vend = nomba.airtime_data.vend_data_parent(
     "MTN",                          // network
     "txn-ref-123",                  // merchant_tx_ref
     Some("John Doe"),               // sender_name
-)?;
+).await?;
 println!("Data vended: {}", vend.data.amount);
 ```
 
@@ -258,7 +237,7 @@ The SDK provides a guided flow for card payments:
 ```rust
 use nomba_rs::Nomba;
 
-let nomba = Nomba::new(...)?;
+let nomba = Nomba::new("client_id", "client_secret", "account_id").await?;
 
 // 1. Create checkout order
 let order = nomba.checkout.create_order(
@@ -269,7 +248,7 @@ let order = nomba.checkout.create_order(
     "John Doe",
     "https://example.com/redirect",
     None, None
-)?;
+).await?;
 
 let order_ref = order.data.order_reference;
 
@@ -282,11 +261,11 @@ let step = flow.submit_card(
     "rsa_public_key",
     Some(true),
     None
-)?;
+).await?;
 
 if step.requires_otp {
     // 4. Submit OTP
-    let step = flow.submit_otp("123456")?;
+    let step = flow.submit_otp("123456").await?;
 }
 
 if step.requires_3ds {
@@ -295,7 +274,7 @@ if step.requires_3ds {
 
 // 5. Confirm final status
 if step.completed {
-    let result = flow.confirm()?;
+    let result = flow.confirm().await?;
     println!("Payment successful: {:?}", result);
 }
 ```
@@ -303,17 +282,17 @@ if step.completed {
 ## Webhook Verification
 
 ```rust
-use nomba_rs::webhooks::{verify_webhook_request, check_timestamp_freshness};
+use nomba_rs::webhooks::verify_webhook_request;
 use std::collections::HashMap;
 
-fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba_rs::Result<()> {
+async fn handle_webhook(body: &[u8], headers: &HashMap<String, String>) -> nomba_rs::Result<()> {
     let payload = verify_webhook_request(
         "your_webhook_signature_key",
         body,
-        &headers,
+        headers,
         Some(300.0), // 5 min replay protection
     )?;
-    
+
     // Process webhook payload
     println!("Received: {:?}", payload);
     Ok(())
@@ -322,37 +301,17 @@ fn handle_webhook(body: &[u8], headers: HashMap<String, String>) -> nomba_rs::Re
 
 ## Pagination
 
-`paginate` takes a `(limit, cursor)` closure returning the raw page as
-`serde_json::Value`, and yields items deserialized from `results`.
-Adapt a typed resource method by serializing its `data` page:
+`paginate` drives cursor pages as a `Stream`. It takes a `(limit, cursor)`
+closure returning the raw page as `serde_json::Value`, and yields items
+deserialized from `results`. Adapt a typed resource method by serializing
+its `data` page:
 
 ```rust
 use nomba_rs::pagination::paginate;
+use futures::StreamExt;
 use std::collections::HashMap;
 
-// Sync pagination
-let accounts = paginate(
-    |limit, cursor| {
-        nomba.virtual_accounts.filter_virtual_accounts(
-            limit.map(|n| n.to_string()),
-            cursor,
-            None, None, None, None, None, None, None, None,
-        )
-        .and_then(|resp| serde_json::to_value(resp.data).map_err(nomba_rs::NombaError::from))
-    },
-    Some(50),
-);
-
-for account in accounts {
-    let account: HashMap<String, serde_json::Value> = account?;
-    println!("{:?}", account.get("accountRef"));
-}
-
-// Async pagination (a Stream)
-use nomba_rs::pagination::apaginate;
-use futures::StreamExt;
-
-let mut stream = apaginate(
+let mut stream = paginate(
     |limit, cursor| {
         let accounts = nomba.virtual_accounts.clone();
         async move {
@@ -396,7 +355,7 @@ let results = gather_limited(calls, 5).await?;
 ```rust
 use nomba_rs::{NombaError, Result};
 
-match nomba.virtual_accounts.create_virtual_account(...) {
+match nomba.virtual_accounts.create_virtual_account("ref", "Name", None, None, None, None, None).await {
     Ok(response) => println!("Success: {:?}", response),
     Err(NombaError::Api { status_code, code, .. }) => {
         eprintln!("API error: {} (status: {:?})", code.unwrap_or_default(), status_code);
@@ -416,7 +375,7 @@ match nomba.virtual_accounts.create_virtual_account(...) {
 Enable the `validation` feature to validate requests locally before sending:
 
 ```toml
-nomba = { version = "0.2", features = ["validation"] }
+nomba-rs = { version = "0.5", features = ["validation"] }
 ```
 
 ```rust

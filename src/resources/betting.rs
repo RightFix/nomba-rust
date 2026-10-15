@@ -23,8 +23,11 @@ impl Betting {
         provider: impl Into<String>,
         customer_id: impl Into<String>,
     ) -> Result<BettingCustomerLookupResponse> {
+        // Docs: `GET /v1/bill/betting/lookup` takes `providerId` (the code
+        // from the providers list, e.g. `bet9ja`) + `customerId`. The old
+        // `provider` name is rejected with a 400.
         let params = vec![
-            ("provider", provider.into()),
+            ("providerId", provider.into()),
             ("customerId", customer_id.into()),
         ];
         let response = self

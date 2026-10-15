@@ -3,6 +3,13 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.2] - 2026-10-15
+
+### Fixed
+
+- Betting `customer_lookup` now sends `providerId` (per the lookup docs)
+  instead of `provider`, which Nomba rejected with a 400.
+
 ## [0.5.1] - 2026-10-15
 
 ### Removed

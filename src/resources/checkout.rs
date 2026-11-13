@@ -3,47 +3,45 @@ use crate::http_client::NombaClient;
 use crate::models::*;
 use serde_json::json;
 
-/// Checkout order body. The sandbox requires the nested `{"order": ...}`
-/// shape (flat bodies 400 with `[order: order can not be null]`); live
-/// takes the flat shape.
+/// Checkout order body.
+///
+/// The API expects the nested `{"order": {...}}` shape on **both** the
+/// sandbox and live: a flat body is rejected with
+/// `[order: order can not be null]`.
+///
+/// `customer_name` and `callback_url` are optional — send them only when
+/// the caller has a real value (an empty/absent redirect URL is worse than
+/// none).
 pub fn checkout_order_body(
-    sandbox: bool,
     order_reference: String,
     amount: String,
     currency: String,
     customer_email: String,
-    customer_name: String,
-    redirect_url: String,
+    customer_name: Option<String>,
+    callback_url: Option<String>,
     description: Option<String>,
     metadata: Option<serde_json::Value>,
 ) -> serde_json::Value {
-    if sandbox {
-        return json!({
-            "order": {
-                "orderReference": order_reference,
-                "amount": amount,
-                "currency": currency,
-                "customerEmail": customer_email,
-                "callbackUrl": redirect_url,
-            }
-        });
-    }
-    let mut body = json!({
+    let mut order = json!({
         "orderReference": order_reference,
         "amount": amount,
         "currency": currency,
         "customerEmail": customer_email,
-        "customerName": customer_name,
-        "redirectUrl": redirect_url,
     });
 
+    if let Some(name) = customer_name {
+        order["customerName"] = json!(name);
+    }
+    if let Some(url) = callback_url {
+        order["callbackUrl"] = json!(url);
+    }
     if let Some(description) = description {
-        body["description"] = json!(description);
+        order["description"] = json!(description);
     }
     if let Some(metadata) = metadata {
-        body["metadata"] = metadata;
+        order["metadata"] = metadata;
     }
-    body
+    json!({ "order": order })
 }
 
 #[derive(Clone)]
@@ -56,25 +54,29 @@ impl Checkout {
         Self { client }
     }
 
+    /// Create a hosted checkout order.
+    ///
+    /// The body is always the nested `{"order": {...}}` shape — the live
+    /// API rejects a flat body with `[order: order can not be null]`.
+    /// `customer_name` and `callback_url` are optional.
     pub async fn create_order(
         &self,
         order_reference: impl Into<String>,
         amount: impl Into<String>,
         currency: impl Into<String>,
         customer_email: impl Into<String>,
-        customer_name: impl Into<String>,
-        redirect_url: impl Into<String>,
+        customer_name: Option<String>,
+        callback_url: Option<String>,
         description: Option<String>,
         metadata: Option<serde_json::Value>,
     ) -> Result<CreateCheckoutOrderResponse> {
         let body = checkout_order_body(
-            self.client.config.sandbox,
             order_reference.into(),
             amount.into(),
             currency.into(),
             customer_email.into(),
-            customer_name.into(),
-            redirect_url.into(),
+            customer_name,
+            callback_url,
             description,
             metadata,
         );
@@ -390,33 +392,40 @@ impl Checkout {
 mod checkout_body_tests {
     use super::checkout_order_body;
 
-    fn args() -> (String, String, String, String, String, String) {
+    fn args() -> (String, String, String, String) {
         (
             "BS-DEP-1".to_string(),
             "500.00".to_string(),
             "NGN".to_string(),
             "a@b.com".to_string(),
-            "A B".to_string(),
-            "https://example.com".to_string(),
         )
     }
 
+    /// Live rejects a flat body with `[order: order can not be null]`, so
+    /// the nested shape is the only one the SDK sends.
     #[test]
-    fn sandbox_body_is_nested() {
-        let (r, a, c, e, n, u) = args();
-        let b = checkout_order_body(true, r, a, c, e, n, u, None, None);
+    fn body_is_nested() {
+        let (r, a, c, e) = args();
+        let b = checkout_order_body(r, a, c, e, Some("A B".to_string()), Some("https://example.com".to_string()), None, None);
         let o = &b["order"];
         assert_eq!(o["orderReference"], "BS-DEP-1");
+        assert_eq!(o["amount"], "500.00");
+        assert_eq!(o["currency"], "NGN");
+        assert_eq!(o["customerEmail"], "a@b.com");
+        assert_eq!(o["customerName"], "A B");
         assert_eq!(o["callbackUrl"], "https://example.com");
         assert!(b.get("orderReference").is_none());
+        assert!(b.get("customerName").is_none());
     }
 
     #[test]
-    fn live_body_is_flat() {
-        let (r, a, c, e, n, u) = args();
-        let b = checkout_order_body(false, r, a, c, e, n, u, None, None);
-        assert_eq!(b["orderReference"], "BS-DEP-1");
-        assert_eq!(b["customerName"], "A B");
-        assert!(b.get("order").is_none());
+    fn optional_fields_are_omitted_when_absent() {
+        let (r, a, c, e) = args();
+        let b = checkout_order_body(r, a, c, e, None, None, None, None);
+        let o = &b["order"];
+        assert_eq!(o["orderReference"], "BS-DEP-1");
+        assert!(o.get("customerName").is_none());
+        assert!(o.get("callbackUrl").is_none());
+        assert!(o.get("redirectUrl").is_none());
     }
 }

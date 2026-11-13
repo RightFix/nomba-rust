@@ -3,6 +3,14 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.5.3
+
+- **fix(checkout): send the nested `{"order": {...}}` body on live as well.**
+  The live API rejects a flat body with `[order: order can not be null]`; only
+  the sandbox was sent the nested shape. `create_order` now always sends the
+  nested body, and `customer_name` / `redirect_url` became `Option` so an
+  absent (or bogus) redirect URL is omitted instead of sent.
+
 ## [0.5.2] - 2026-10-15
 
 ### Fixed

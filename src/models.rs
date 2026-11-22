@@ -431,7 +431,7 @@ pub struct BankAccountLookupResponse {
 /// Transfers models
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransferData {
-    pub amount: String,
+    pub amount: f64,
     pub source: String,
     #[serde(rename = "sourceUserId")]
     pub source_user_id: String,

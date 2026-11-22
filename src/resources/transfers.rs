@@ -43,21 +43,21 @@ impl Transfers {
     pub async fn bank_transfer_from_parent(
         &self,
         amount: impl Into<String>,
-        destination_account_number: impl Into<String>,
-        destination_bank_code: impl Into<String>,
-        narration: impl Into<String>,
+        account_number: impl Into<String>,
+        bank_code: impl Into<String>,
+        account_name: impl Into<String>,
         merchant_tx_ref: impl Into<String>,
-        customer_name: Option<String>,
+        sender_name: Option<String>,
     ) -> Result<PerformBankTransferResponse> {
         let mut body = json!({
             "amount": amount.into(),
-            "destinationAccountNumber": destination_account_number.into(),
-            "destinationBankCode": destination_bank_code.into(),
-            "narration": narration.into(),
+            "accountNumber": account_number.into(),
+            "bankCode": bank_code.into(),
+            "accountName": account_name.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        if let Some(customer_name) = customer_name {
-            body["customerName"] = json!(customer_name);
+        if let Some(sender_name) = sender_name {
+            body["senderName"] = json!(sender_name);
         }
         let response = self.client.post("/v2/transfers/bank", &body, None).await?;
         Ok(serde_json::from_value(response)?)
@@ -67,21 +67,21 @@ impl Transfers {
         &self,
         account_id: impl Into<String>,
         amount: impl Into<String>,
-        destination_account_number: impl Into<String>,
-        destination_bank_code: impl Into<String>,
-        narration: impl Into<String>,
+        account_number: impl Into<String>,
+        bank_code: impl Into<String>,
+        account_name: impl Into<String>,
         merchant_tx_ref: impl Into<String>,
-        customer_name: Option<String>,
+        sender_name: Option<String>,
     ) -> Result<PerformBankTransferResponse> {
         let mut body = json!({
             "amount": amount.into(),
-            "destinationAccountNumber": destination_account_number.into(),
-            "destinationBankCode": destination_bank_code.into(),
-            "narration": narration.into(),
+            "accountNumber": account_number.into(),
+            "bankCode": bank_code.into(),
+            "accountName": account_name.into(),
             "merchantTxRef": merchant_tx_ref.into(),
         });
-        if let Some(customer_name) = customer_name {
-            body["customerName"] = json!(customer_name);
+        if let Some(sender_name) = sender_name {
+            body["senderName"] = json!(sender_name);
         }
         let path = format!("/v2/transfers/bank/{}", account_id.into());
         let response = self.client.post(&path, &body, None).await?;

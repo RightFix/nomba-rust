@@ -3,7 +3,20 @@
 All notable changes to `nomba-rs` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 0.5.3
+## 0.5.4 - 2026-11-22
+
+### Fixed
+
+- **fix(transfers): send the correct `/v2/transfers/bank` body fields.**
+  `bank_transfer_from_parent` / `bank_transfer_from_account` now send
+  `accountNumber`, `bankCode`, `accountName`, `merchantTxRef`, `senderName`
+  per the OpenAPI spec, instead of the old `destinationAccountNumber`,
+  `destinationBankCode`, `narration`, `customerName` keys that Nomba rejected
+  with "accountName/accountNumber/bankCode must not be blank".
+
+## 0.5.3 - 2026-11-20
+
+### Fixed
 
 - **fix(checkout): send the nested `{"order": {...}}` body on live as well.**
   The live API rejects a flat body with `[order: order can not be null]`; only

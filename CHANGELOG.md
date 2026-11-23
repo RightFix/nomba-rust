@@ -5,6 +5,11 @@ All notable changes to `nomba-rs` are documented here. The format follows
 
 ## 0.5.4 - 2026-11-22
 
+### Added
+
+- **Virtual accounts:** `simulate_inflow` (`POST /v1/accounts/virtual/{identifier}/simulate-inflow`, sandbox only) and `callback_url`/`mode` (`SIMULATED`|`LIVE`) on virtual-account create requests and `mode` on virtual-account responses.
+- Bundled OpenAPI spec synced to live Nomba docs (103 paths, 116 schemas).
+
 ### Fixed
 
 - **fix(transfers): send the correct `/v2/transfers/bank` body fields.**
@@ -13,6 +18,7 @@ All notable changes to `nomba-rs` are documented here. The format follows
   per the OpenAPI spec, instead of the old `destinationAccountNumber`,
   `destinationBankCode`, `narration`, `customerName` keys that Nomba rejected
   with "accountName/accountNumber/bankCode must not be blank".
+- Tokenized card models aligned to live spec (`tokenExpiryDate`, updated charge/update/delete/list response shapes).
 
 ## 0.5.3 - 2026-11-20
 

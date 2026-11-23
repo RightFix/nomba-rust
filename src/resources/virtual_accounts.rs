@@ -14,6 +14,8 @@ pub fn build_virtual_account_body(
     expiry_date: Option<String>,
     expected_amount: Option<String>,
     restrict_inflow_to_account_name: Option<String>,
+    callback_url: Option<String>,
+    mode: Option<String>,
 ) -> serde_json::Value {
     let mut body = json!({
         "accountRef": account_ref,
@@ -33,6 +35,12 @@ pub fn build_virtual_account_body(
     }
     if let Some(restrict_inflow_to_account_name) = restrict_inflow_to_account_name {
         body["restrictInflowToAccountName"] = json!(restrict_inflow_to_account_name);
+    }
+    if let Some(callback_url) = callback_url {
+        body["callbackUrl"] = json!(callback_url);
+    }
+    if let Some(mode) = mode {
+        body["mode"] = json!(mode);
     }
     body
 }
@@ -56,6 +64,8 @@ impl VirtualAccounts {
         expiry_date: Option<String>,
         expected_amount: Option<String>,
         restrict_inflow_to_account_name: Option<String>,
+        callback_url: Option<String>,
+        mode: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
         let body = build_virtual_account_body(
             account_ref.into(),
@@ -65,6 +75,8 @@ impl VirtualAccounts {
             expiry_date,
             expected_amount,
             restrict_inflow_to_account_name,
+            callback_url,
+            mode,
         );
 
         let response = self
@@ -84,6 +96,8 @@ impl VirtualAccounts {
         expiry_date: Option<String>,
         expected_amount: Option<String>,
         restrict_inflow_to_account_name: Option<String>,
+        callback_url: Option<String>,
+        mode: Option<String>,
     ) -> Result<CreateVirtualAccountResponse> {
         let body = build_virtual_account_body(
             account_ref.into(),
@@ -93,6 +107,8 @@ impl VirtualAccounts {
             expiry_date,
             expected_amount,
             restrict_inflow_to_account_name,
+            callback_url,
+            mode,
         );
 
         let path = format!("/v1/accounts/virtual/{}", sub_account_id.into());
@@ -194,6 +210,34 @@ impl VirtualAccounts {
         let response = self.client.delete(&path, None).await?;
         Ok(serde_json::from_value(response)?)
     }
+
+    /// Sandbox only. Simulates a bank transfer into a SIMULATED sandbox virtual account.
+    pub async fn simulate_inflow(
+        &self,
+        identifier: impl Into<String>,
+        amount: impl Into<String>,
+        sender_account_name: impl Into<String>,
+        sender_account_number: Option<String>,
+        sender_bank_code: Option<String>,
+        narration: Option<String>,
+    ) -> Result<SimulateInflowResponse> {
+        let mut body = json!({
+            "amount": amount.into(),
+            "senderAccountName": sender_account_name.into(),
+        });
+        if let Some(v) = sender_account_number {
+            body["senderAccountNumber"] = json!(v);
+        }
+        if let Some(v) = sender_bank_code {
+            body["senderBankCode"] = json!(v);
+        }
+        if let Some(v) = narration {
+            body["narration"] = json!(v);
+        }
+        let path = format!("/v1/accounts/virtual/{}/simulate-inflow", identifier.into());
+        let response = self.client.post(&path, &body, None).await?;
+        Ok(serde_json::from_value(response)?)
+    }
 }
 
 #[cfg(test)]
@@ -207,6 +251,8 @@ mod virtual_account_body_tests {
             "Test User".to_string(),
             None,
             Some("12345678901".to_string()),
+            None,
+            None,
             None,
             None,
             None,
@@ -226,12 +272,16 @@ mod virtual_account_body_tests {
             Some("2027-01-30 12:15:00".to_string()),
             Some("200.00".to_string()),
             Some("Test User".to_string()),
+            Some("https://merchant.example.com/webhooks/nomba".to_string()),
+            Some("SIMULATED".to_string()),
         );
         assert_eq!(b["bvn"], "12345678901");
         assert_eq!(b["nin"], "12345678901");
         assert_eq!(b["expiryDate"], "2027-01-30 12:15:00");
         assert_eq!(b["expectedAmount"], "200.00");
         assert_eq!(b["restrictInflowToAccountName"], "Test User");
+        assert_eq!(b["callbackUrl"], "https://merchant.example.com/webhooks/nomba");
+        assert_eq!(b["mode"], "SIMULATED");
     }
 
     #[test]
@@ -239,6 +289,8 @@ mod virtual_account_body_tests {
         let b = build_virtual_account_body(
             "ref".to_string(),
             "Name Here".to_string(),
+            None,
+            None,
             None,
             None,
             None,

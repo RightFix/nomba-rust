@@ -182,6 +182,9 @@ pub struct VirtualAccountData {
     /// Restrict inflows to the account name when set at creation.
     #[serde(rename = "restrictInflowToAccountName", default)]
     pub restrict_inflow_to_account_name: Option<String>,
+    /// Sandbox only: `SIMULATED` or `LIVE`. Not returned in production.
+    #[serde(default)]
+    pub mode: Option<String>,
     pub expired: bool,
 }
 
@@ -218,6 +221,32 @@ pub struct ExpireVirtualAccountResponse {
     pub code: String,
     pub description: String,
     pub data: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SimulateInflowData {
+    pub status: String,
+    #[serde(rename = "responseCode")]
+    pub response_code: String,
+    #[serde(default)]
+    pub reason: Option<String>,
+    #[serde(rename = "transactionRef", default)]
+    pub transaction_ref: Option<String>,
+    #[serde(rename = "sessionId", default)]
+    pub session_id: Option<String>,
+    #[serde(rename = "accountNumber", default)]
+    pub account_number: Option<String>,
+    #[serde(rename = "accountRef", default)]
+    pub account_ref: Option<String>,
+    #[serde(default)]
+    pub amount: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SimulateInflowResponse {
+    pub code: String,
+    pub description: String,
+    pub data: SimulateInflowData,
 }
 
 /// Checkout models
@@ -352,23 +381,49 @@ pub struct CancelCheckoutOrderResponse {
 /// Charge models
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenizedCardData {
+    #[serde(rename = "tokenKey", default)]
+    pub token_key: String,
+    #[serde(rename = "customerEmail", default)]
+    pub customer_email: String,
+    #[serde(rename = "cardType", default)]
+    pub card_type: String,
+    #[serde(rename = "cardPan", default)]
+    pub card_pan: String,
+    #[serde(rename = "tokenExpiryDate", default)]
+    pub token_expiry_date: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChargeWithTokenizedCardData {
+    #[serde(default)]
     pub status: bool,
+    #[serde(default)]
     pub message: String,
+    #[serde(rename = "orderId", default)]
+    pub order_id: Option<String>,
+    #[serde(rename = "orderReference", default)]
+    pub order_reference: Option<String>,
+    #[serde(rename = "otpRequired", default)]
+    pub otp_required: Option<bool>,
+    #[serde(rename = "transactionId", default)]
+    pub transaction_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChargeWithTokenizedCardResponse {
     pub code: String,
     pub description: String,
-    pub data: TokenizedCardData,
+    pub data: ChargeWithTokenizedCardData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenizedCardListData {
-    #[serde(rename = "nextPage")]
-    pub next_page: String,
-    #[serde(rename = "tokenizedCardDataList")]
-    pub tokenized_card_data_list: Vec<HashMap<String, serde_json::Value>>,
+    #[serde(rename = "hasNextPage", default)]
+    pub has_next_page: Option<bool>,
+    #[serde(rename = "nextPage", default)]
+    pub next_page: Option<serde_json::Value>,
+    #[serde(rename = "tokenizedCardDataList", default)]
+    pub tokenized_card_data_list: Vec<TokenizedCardData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -379,17 +434,35 @@ pub struct ListTokenizedCardsResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateTokenizedCardData {
+    #[serde(default)]
+    pub status: bool,
+    #[serde(default)]
+    pub message: String,
+    #[serde(rename = "tokenizedCardData", default)]
+    pub tokenized_card_data: Option<TokenizedCardData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateTokenizedCardResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: UpdateTokenizedCardData,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeleteTokenizedCardData {
+    #[serde(default)]
+    pub status: bool,
+    #[serde(default)]
+    pub message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteTokenizedCardResponse {
     pub code: String,
     pub description: String,
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: DeleteTokenizedCardData,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

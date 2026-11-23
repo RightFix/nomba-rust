@@ -440,13 +440,14 @@ pub struct BankTransferData {
     #[serde(rename = "productId")]
     pub product_id: String,
     pub meta: HashMap<String, serde_json::Value>,
-    pub fee: f64,
     #[serde(rename = "timeCreated")]
     pub time_created: String,
     pub id: String,
     #[serde(rename = "type")]
     pub transfer_type: String,
     pub status: String,
+     #[serde(rename = "userId")]
+     pub user_id: String
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
